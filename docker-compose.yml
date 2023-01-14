@@ -1,0 +1,11 @@
+services:
+    redis:
+        image: "redis:latest"
+        ports:
+            - "6379:6379"
+        volumes:
+            - splat3api-redis-volume:/datas
+            - "./src/configs/redis.conf:/etc/redis.conf"
+
+volumes:
+    splat3api-redis-volume:
