@@ -12,4 +12,6 @@ const client = createClient({
     url: `redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
 });
 
+await client.connect();
+
 export const RedisClient = client;
