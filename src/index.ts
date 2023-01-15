@@ -1,8 +1,15 @@
+// import { Logger } from "./log/winston.js";
 import { RedisClient } from "./redis/RedisClient.js";
 import { Auth } from "./splatnet/Auth.js";
 
-const coralApi = await Auth.getCoralApi();
+import { CreateLogger } from "./log/winston.js";
 
-console.log(JSON.stringify(coralApi, null, 2));
+const bulletToken = await Auth.getBulletToken();
 
+// console.log(JSON.stringify(coralApi.data, null, 2));
+
+// Logger.debug("test");
+// console.log(JSON.stringify(coralApi.data, null, 2));
+const logger = CreateLogger("Index");
+logger.debug(bulletToken);
 RedisClient.disconnect();
