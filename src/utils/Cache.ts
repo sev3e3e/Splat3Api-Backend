@@ -1,5 +1,7 @@
 import { RedisClient } from "../redis/RedisClient.js";
 
+// TODO: 毎回Redisと通信するのやめる
+
 /**
  * Redis Client Wrapper for Cache.
  */
