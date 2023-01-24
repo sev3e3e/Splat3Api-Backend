@@ -13,11 +13,7 @@ class Cache {
      * @param value 保存したいデータ内容
      * @param expires 期限切れになる時間(秒)
      */
-    async set(name: string, value: any, expires: number | null) {
-        if (!expires) {
-            expires = 0;
-        }
-
+    async set(name: string, value: any, expires: number = 0) {
         return RedisClient.set(name, JSON.stringify(value), {
             EX: expires,
         });

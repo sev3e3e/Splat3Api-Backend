@@ -32,9 +32,7 @@ export class StageScheduleUpdater extends DataUpdater {
     }
 
     async update(): Promise<StageSchedule> {
-        const data = await (
-            await this.getData((await Auth.getBulletToken()).bulletToken)
-        ).json();
+        const data = Auth.
 
         const regularSchedules = this._parseSchedules(
             data["data"]["regularSchedules"],

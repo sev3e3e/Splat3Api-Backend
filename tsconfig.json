@@ -3,9 +3,8 @@
         "strict": true,
         "target": "es2020",
         "module": "ESNext",
-        "jsx": "react",
-        "moduleResolution": "node16",
-        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "Node16",
+        // "allowSyntheticDefaultImports": true,
         "declaration": true,
         "importHelpers": true,
         "rootDir": "src",
@@ -16,7 +15,9 @@
         "skipLibCheck": true,
         "allowJs": true,
         "emitDecoratorMetadata": true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "esModuleInterop": true
     },
-    "include": ["src"]
+    "include": ["src"],
+    "exclude": ["./src/tests/"]
 }
