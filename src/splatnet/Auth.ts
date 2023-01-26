@@ -30,7 +30,7 @@ export class Authentication {
     }
 
     private async createApiClient(nso: CoralApi, coralAuthData: CoralAuthData) {
-        const cachedAuthData = await ValueCache.get("CoralAuthData");
+        const cachedAuthData = await ValueCache.get("SplatNet3AuthData");
 
         // cache 有り
         if (cachedAuthData != null) {
@@ -47,11 +47,7 @@ export class Authentication {
         );
 
         // authDataをcacheする
-        await ValueCache.set(
-            "CoralAuthData",
-            data,
-            ReduceCacheExpiration(data.expires_at)
-        );
+        await ValueCache.set("SplatNet3AuthData", data);
 
         return splatnet;
     }

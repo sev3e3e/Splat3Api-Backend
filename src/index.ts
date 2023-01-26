@@ -2,8 +2,7 @@
 import { RedisClient } from "./redis/RedisClient.js";
 
 import { CreateLogger } from "./log/winston.js";
-import { StageScheduleUpdater } from "./splatnet/data/updaters/StageSchedule.js";
-import { Authentication } from "./splatnet/Auth.js";
+import { splatnet3ApiClient } from "./splatnet/SplatNet3Client.js";
 
 // import * as fs from "fs";
 
@@ -14,15 +13,9 @@ const index = async () => {
 
     // const json = await updater.update();
 
-    const auth = new Authentication();
-
-    const api = await auth.initialize();
-
-    const json = await api.getSchedules();
+    logger.debug(await splatnet3ApiClient.getSchedules());
 
     await RedisClient.disconnect();
-
-    logger.debug(json.data.bankaraSchedules);
 };
 
 await index();
