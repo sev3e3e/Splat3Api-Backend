@@ -1,20 +1,29 @@
 import { RedisClient } from "../redis/RedisClient.js";
 
-// TODO: 毎回Redisと通信するのやめる
-
 /**
  * Redis Client Wrapper for Cache.
  */
 class Cache {
+    storedObjects: { [index: string]: string };
+
+    constructor() {
+        this.storedObjects = {};
+    }
+
     /**
      * キャッシュするデータをセットします。
      * 値はJSON文字列化されます。
+     * 同名のデータは上書きされます。
      * @param name 保存したいデータ名
      * @param value 保存したいデータ内容
      * @param expires 期限切れになる時間(秒)
      */
     async set(name: string, value: any, expires: number = 0) {
-        return RedisClient.set(name, JSON.stringify(value), {
+        const jsonValue = JSON.stringify(value);
+
+        this.storedObjects["name"] = jsonValue;
+
+        return RedisClient.set(name, jsonValue, {
             EX: expires,
         });
     }
@@ -24,7 +33,11 @@ class Cache {
      * @param name 取得したいデータ名
      */
     async get(name: string): Promise<string | null> {
-        return RedisClient.get(name);
+        if (name in this.storedObjects) {
+            return this.storedObjects[name];
+        } else {
+            return RedisClient.get(name);
+        }
     }
 }
 
