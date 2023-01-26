@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import SplatNet3Api from "nxapi/splatnet3";
 import { ValueCache } from "../utils/Cache.js";
 import { Auth } from "./Auth.js";
@@ -15,8 +16,8 @@ class Splatnet3Client {
         this.apiClient = api;
     }
 
-    // expireの付け方迷ってる
-    //
+    async getAllSchedules() {}
+
     async getOpenBankaraSchedules() {
         // check caches
         const cache = await ValueCache.get("Schedules");
@@ -24,12 +25,22 @@ class Splatnet3Client {
         if (cache == null) {
             const schedules = await this.apiClient.getSchedules();
 
-            await ValueCache.set("Schedules", schedules);
-
             const converted =
                 scheduleCredentialRemover.removeBankaraScheduleCredentials(
                     schedules.data.bankaraSchedules
                 );
+
+            // TTL設定
+            // 最新のスケジュールの終了をTTL
+            // 0以下になったらキャッシュしない
+            const diff = dayjs(converted.open[0].endTime).diff(
+                dayjs(),
+                "second"
+            );
+
+            if (diff > 0) {
+                await ValueCache.set("Schedules", schedules, diff);
+            }
 
             return converted.open;
         } else {
@@ -37,7 +48,35 @@ class Splatnet3Client {
         }
     }
 
-    async getChallengeBankaraSchedules() {}
+    async getChallengeBankaraSchedules() {
+        // check caches
+        const cache = await ValueCache.get("Schedules");
+
+        if (cache == null) {
+            const schedules = await this.apiClient.getSchedules();
+
+            const converted =
+                scheduleCredentialRemover.removeBankaraScheduleCredentials(
+                    schedules.data.bankaraSchedules
+                );
+
+            // TTL設定
+            // 最新のスケジュールの終了をTTL
+            // 0以下になったらキャッシュしない
+            const diff = dayjs(converted.challenge[0].endTime).diff(
+                dayjs(),
+                "second"
+            );
+
+            if (diff > 0) {
+                await ValueCache.set("Schedules", schedules, diff);
+            }
+
+            return converted.challenge;
+        } else {
+            return JSON.parse(cache) as Schedule[];
+        }
+    }
 }
 
 const _splatnet3ApiClient = new Splatnet3Client();
