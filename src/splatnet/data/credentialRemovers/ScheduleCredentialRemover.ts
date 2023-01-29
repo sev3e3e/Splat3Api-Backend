@@ -25,6 +25,13 @@ export interface Schedule {
     rule: string;
 }
 
+export interface SalmonRunSchedule {
+    startTime: Date;
+    endTime: Date;
+    stage: string;
+    weapons: string[]
+}
+
 interface Stage {
     id: number;
     name: string;
@@ -54,6 +61,27 @@ class ScheduleCredentialRemover {
     ) {
         return this._parseSchedules(leagueSchedule, "league");
     }
+
+    removeSalmonRunScheduleCredentials(salmonRunSchedule: StageScheduleQuery_730cd98["coopGroupingSchedule"]) {
+        const nodes = salmonRunSchedule.regularSchedules.nodes;
+        const schedules: SalmonRunSchedule[] = nodes.map((node) => {
+            const startTime = node["startTime"];
+            const endTime = node["endTime"];
+            const stage = node.setting.coopStage.name;
+            const weapons = node.setting.weapons.map((weapon) => weapon.name);
+
+            return {
+                startTime: dayjs(startTime).tz().toDate(),
+                endTime: dayjs(endTime).tz().toDate(),
+                stage: stage,
+                weapons: weapons
+            }
+            
+        })
+
+        return schedules;
+    }
+
 
     private _parseSchedules(
         anySchedules: any,

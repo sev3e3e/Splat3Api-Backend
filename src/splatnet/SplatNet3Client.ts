@@ -16,7 +16,16 @@ class Splatnet3Client {
         this.apiClient = api;
     }
 
-    async getAllSchedules() {}
+    async getAllSchedules() {
+        // check caches
+        const cache = await ValueCache.get("Schedules");
+
+        if (cache == null) {
+            const schedules = await this.apiClient.getSchedules();
+
+            // convert all
+        }
+    }
 
     async getOpenBankaraSchedules() {
         // check caches
@@ -75,6 +84,31 @@ class Splatnet3Client {
             return converted.challenge;
         } else {
             return JSON.parse(cache) as Schedule[];
+        }
+    }
+
+    async getSalmonRunSchedules() {
+        const cache = await ValueCache.get("Schedules");
+
+        if (cache == null) {
+            const schedules = await this.apiClient.getSchedules();
+            console.log(schedules.data.coopGroupingSchedule.regularSchedules.nodes);
+
+            const diff = dayjs(schedules.data.bankaraSchedules.nodes[0].endTime).diff(
+                dayjs(),
+                "second"
+            );
+
+            if (diff > 0) {
+                await ValueCache.set("Schedules", schedules, diff);
+            }
+        }
+        else {
+            const schedules = JSON.parse(cache);
+
+            const removed = scheduleCredentialRemover.removeSalmonRunScheduleCredentials(schedules.data.coopGroupingSchedule)
+
+            console.log(removed);
         }
     }
 }

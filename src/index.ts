@@ -13,7 +13,7 @@ const index = async () => {
 
     // const json = await updater.update();
 
-    await splatnet3ApiClient.getOpenBankaraSchedules();
+    await splatnet3ApiClient.getSalmonRunSchedules();
 
     await RedisClient.disconnect();
 };
