@@ -44,7 +44,7 @@ export class Authentication {
         const { splatnet, data } = await SplatNet3Api.createWithCoral(nso, coralAuthData.user);
 
         // authDataをcacheする
-        await ValueCache.set('SplatNet3AuthData', data);
+        await ValueCache.set('SplatNet3AuthData', data, 7000);
 
         return splatnet;
     }
@@ -57,7 +57,7 @@ export class Authentication {
             const CachedCoralSession = await ValueCache.get('CoralSession');
 
             if (CachedCoralSession != null) {
-                this.Logger.info('キャッシュされたCoralAuthDataを使用します');
+                this.Logger.info('キャッシュされたCoralSessionを使用します');
 
                 const session = JSON.parse(CachedCoralSession.value) as {
                     nso: CoralApi;
@@ -75,83 +75,12 @@ export class Authentication {
 
         const session = await CoralApi.createWithSessionToken(this.NINTENDO_TOKEN);
 
-        const reducedExpires = ReduceCacheExpiration(session.data.credential.expiresIn);
+        // const reducedExpires = ReduceCacheExpiration(session.data.credential.expiresIn);
 
-        await ValueCache.set('CoralSession', session, reducedExpires);
+        await ValueCache.set('CoralSession', session);
 
         return session;
     }
-
-    // async getWebServiceToken(
-    //     useCache: boolean = true
-    // ): Promise<WebServiceToken> {
-    //     const coralApi = (await this.getCoralApi()).nso;
-
-    //     if (useCache) {
-    //         const CachedWebServiceToken = await ValueCache.get(
-    //             "WebServiceToken"
-    //         );
-
-    //         if (CachedWebServiceToken != null) {
-    //             return JSON.parse(CachedWebServiceToken) as WebServiceToken;
-    //         }
-    //     }
-
-    //     const token: WebServiceToken = await coralApi.getWebServiceToken(
-    //         this.SPLATOON3_SERVICE_ID
-    //     );
-
-    //     const reducedExpires = ReduceCacheExpiration(token.expiresIn);
-
-    //     await ValueCache.set("WebServiceToken", token, reducedExpires);
-
-    //     return token;
-    // }
-
-    // async getBulletToken(useCache: boolean = true): Promise<BulletToken> {
-    //     if (useCache) {
-    //         const token = await ValueCache.get("BulletToken");
-
-    //         if (token) {
-    //             this.Logger.debug("getBulletToken using cache...");
-
-    //             return JSON.parse(token) as BulletToken;
-    //         }
-    //     }
-
-    //     this.Logger.debug("getBulletToken generates the session...");
-
-    //     const webServiceToken = await this.getWebServiceToken();
-
-    //     console.log(webServiceToken);
-
-    //     const res = await fetch(
-    //         process.env.SPLATOON3_BASE_URL + "/api/bullet_tokens",
-    //         {
-    //             method: "POST",
-    //             headers: {
-    //                 "X-Web-View-Ver": "2.0.0-bd36a652",
-    //                 "X-NACOUNTRY": "JP",
-    //                 "X-GameWebToken": webServiceToken.accessToken,
-    //                 "Accept-Language": "ja-jp",
-    //             },
-    //         }
-    //     );
-
-    //     if (res.status !== 201) {
-    //         throw new Error(
-    //             `[splatnet3] Non-200 status code. ${
-    //                 res.status
-    //             } ${await res.text()}`
-    //         );
-    //     }
-
-    //     const token = await res.json();
-
-    //     await ValueCache.set("BulletToken", token);
-
-    //     return token;
-    // }
 }
 
 const auth = new Authentication();

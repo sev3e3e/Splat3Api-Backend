@@ -16,9 +16,9 @@ class Splatnet3Client {
     async initialize() {
         const api = await Auth.initialize();
 
-        api.onTokenExpired = async (res: Response) {
-            const coralAuthData = await ValueCache.get("")
-        }
+        // api.onTokenExpired = async (res: Response) => {
+        //     const coralAuthData = await ValueCache.get('');
+        // };
 
         this.apiClient = api;
     }
