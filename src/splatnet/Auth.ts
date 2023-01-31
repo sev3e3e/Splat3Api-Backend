@@ -1,9 +1,9 @@
-import CoralApi, { CoralAuthData } from "nxapi/coral";
-import SplatNet3Api, { SplatNet3AuthData } from "nxapi/splatnet3";
-import winston from "winston";
-import { CreateLogger } from "../log/winston.js";
-import { ValueCache } from "../utils/Cache.js";
-import { ReduceCacheExpiration } from "../utils/util.js";
+import CoralApi, { CoralAuthData } from 'nxapi/coral';
+import SplatNet3Api, { SplatNet3AuthData } from 'nxapi/splatnet3';
+import winston from 'winston';
+import { CreateLogger } from '../log/winston.js';
+import { ValueCache } from '../cache/Cache.js';
+import { ReduceCacheExpiration } from '../utils/util.js';
 
 export class Authentication {
     NINTENDO_TOKEN: string;
@@ -12,16 +12,16 @@ export class Authentication {
 
     constructor() {
         if (!process.env.NINTENDO_TOKEN) {
-            throw new Error("NintendoTokenがセットされていません。");
+            throw new Error('NintendoTokenがセットされていません。');
         }
 
         if (!process.env.SPLATOON3_SERVICE_ID) {
-            throw new Error("Splatoon3のWebService IDがセットされていません。");
+            throw new Error('Splatoon3のWebService IDがセットされていません。');
         }
 
         this.NINTENDO_TOKEN = process.env.NINTENDO_TOKEN;
         // this.SPLATOON3_SERVICE_ID = parseInt(process.env.SPLATOON3_SERVICE_ID);
-        this.Logger = CreateLogger("Auth");
+        this.Logger = CreateLogger('Auth');
     }
 
     async initialize() {
@@ -30,24 +30,21 @@ export class Authentication {
     }
 
     private async createApiClient(nso: CoralApi, coralAuthData: CoralAuthData) {
-        const cachedAuthData = await ValueCache.get("SplatNet3AuthData");
+        const cachedAuthData = await ValueCache.get('SplatNet3AuthData');
 
         // cache 有り
         if (cachedAuthData != null) {
             this.Logger.info(`キャッシュされたSplatNet3AuthDataを使用します`);
-            const authData = JSON.parse(cachedAuthData) as SplatNet3AuthData;
+            const authData = JSON.parse(cachedAuthData.value) as SplatNet3AuthData;
 
             return SplatNet3Api.createWithSavedToken(authData);
         }
 
         // cache無いため普通に作る
-        const { splatnet, data } = await SplatNet3Api.createWithCoral(
-            nso,
-            coralAuthData.user
-        );
+        const { splatnet, data } = await SplatNet3Api.createWithCoral(nso, coralAuthData.user);
 
         // authDataをcacheする
-        await ValueCache.set("SplatNet3AuthData", data);
+        await ValueCache.set('SplatNet3AuthData', data);
 
         return splatnet;
     }
@@ -57,12 +54,12 @@ export class Authentication {
         data: CoralAuthData;
     }> {
         if (useCache) {
-            const CachedCoralSession = await ValueCache.get("CoralSession");
+            const CachedCoralSession = await ValueCache.get('CoralSession');
 
             if (CachedCoralSession != null) {
-                this.Logger.info("キャッシュされたCoralAuthDataを使用します");
+                this.Logger.info('キャッシュされたCoralAuthDataを使用します');
 
-                const session = JSON.parse(CachedCoralSession) as {
+                const session = JSON.parse(CachedCoralSession.value) as {
                     nso: CoralApi;
                     data: CoralAuthData;
                 };
@@ -74,17 +71,13 @@ export class Authentication {
             }
         }
 
-        this.Logger.debug("getCoralApi generates the session...");
+        this.Logger.debug('getCoralApi generates the session...');
 
-        const session = await CoralApi.createWithSessionToken(
-            this.NINTENDO_TOKEN
-        );
+        const session = await CoralApi.createWithSessionToken(this.NINTENDO_TOKEN);
 
-        const reducedExpires = ReduceCacheExpiration(
-            session.data.credential.expiresIn
-        );
+        const reducedExpires = ReduceCacheExpiration(session.data.credential.expiresIn);
 
-        await ValueCache.set("CoralSession", session, reducedExpires);
+        await ValueCache.set('CoralSession', session, reducedExpires);
 
         return session;
     }

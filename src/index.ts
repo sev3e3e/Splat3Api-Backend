@@ -1,19 +1,19 @@
 // import { Logger } from "./log/winston.js";
-import { RedisClient } from "./redis/RedisClient.js";
+import { RedisClient } from './redis/RedisClient.js';
 
-import { CreateLogger } from "./log/winston.js";
-import { splatnet3ApiClient } from "./splatnet/SplatNet3Client.js";
+import { CreateLogger } from './log/winston.js';
+import { splatnet3ApiClient } from './splatnet/SplatNet3Client.js';
 
 // import * as fs from "fs";
 
 // 一旦deployしたい
 const index = async () => {
-    const logger = CreateLogger("Index");
+    const logger = CreateLogger('Index');
     // const updater = new StageScheduleUpdater();
 
     // const json = await updater.update();
 
-    await splatnet3ApiClient.getSalmonRunSchedules();
+    await splatnet3ApiClient.getAllSchedules();
 
     await RedisClient.disconnect();
 };
