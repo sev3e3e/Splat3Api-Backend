@@ -31,11 +31,7 @@ class Splatnet3Client {
         this.apiClient = api;
     }
 
-    // TODO: 2023/02/01 キャッシュ実装 TTLより前に更新するようにする
     async getAllSchedules() {
-        // Schedulesをキャッシュ
-        // TTLが残り10 * 60になったら更新したい
-
         // check caches
         const cache = await ValueCache.get('Schedules');
 
