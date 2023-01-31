@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import SplatNet3Api from 'nxapi/splatnet3';
 import { ValueCache } from '../cache/Cache.js';
 import { Auth } from './Auth.js';
@@ -8,6 +7,15 @@ import {
     scheduleCredentialRemover,
     StageSchedule,
 } from './data/credentialRemovers/ScheduleCredentialRemover.js';
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault('Asia/Tokyo');
 
 class Splatnet3Client {
     apiClient!: SplatNet3Api;
@@ -35,14 +43,16 @@ class Splatnet3Client {
         if (cache == null || cache.TTL <= 600) {
             const schedules = await this.apiClient.getSchedules();
 
-            // 最終スケジュールの終わり == データがもうない限界をTTLとする
-            const endTime =
-                schedules.data.bankaraSchedules.nodes[schedules.data.bankaraSchedules.nodes.length - 1].endTime;
+            // 最終スケジュールの始まり == データがもうない限界のStartTimeをTTLとする
+            const startTime =
+                schedules.data.bankaraSchedules.nodes[schedules.data.bankaraSchedules.nodes.length - 1].startTime;
+
+            const now = dayjs().tz();
 
             const removed = scheduleCredentialRemover.removeAllCredentials(schedules.data);
 
             // credentialを消したデータをキャッシュする
-            await ValueCache.set('Schedules', removed, dayjs(endTime).diff(dayjs(), 'second'));
+            await ValueCache.set('Schedules', removed, dayjs.tz(startTime).diff(now, 'second'));
 
             return removed;
         }
