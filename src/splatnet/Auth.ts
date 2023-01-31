@@ -25,8 +25,9 @@ export class Authentication {
     }
 
     async initialize() {
-        const { nso, data } = await this.getCoralApi();
-        return this.createApiClient(nso, data);
+        const nso = await this.getCoralApi();
+        const authData = await this.getCoralAuthData();
+        return this.createApiClient(nso, authData);
     }
 
     private async createApiClient(nso: CoralApi, coralAuthData: CoralAuthData) {
@@ -49,37 +50,41 @@ export class Authentication {
         return splatnet;
     }
 
-    async getCoralApi(useCache: boolean = true): Promise<{
-        nso: CoralApi;
-        data: CoralAuthData;
-    }> {
-        if (useCache) {
-            const CachedCoralSession = await ValueCache.get('CoralSession');
+    async getCoralApi(): Promise<CoralApi> {
+        const cache = await ValueCache.get('CoralApiToken');
 
-            if (CachedCoralSession != null) {
-                this.Logger.info('キャッシュされたCoralSessionを使用します');
+        if (cache != null) {
+            this.Logger.info('キャッシュされたCoralApiTokenを使用します');
 
-                const session = JSON.parse(CachedCoralSession.value) as {
-                    nso: CoralApi;
-                    data: CoralAuthData;
-                };
+            const token = cache.value;
 
-                return {
-                    nso: CoralApi.createWithSavedToken(session.data),
-                    data: session.data,
-                };
-            }
+            return (await CoralApi.createWithSessionToken(token)).nso;
         }
 
-        this.Logger.debug('getCoralApi generates the session...');
+        this.Logger.debug('generates coral session...');
 
         const session = await CoralApi.createWithSessionToken(this.NINTENDO_TOKEN);
 
-        // const reducedExpires = ReduceCacheExpiration(session.data.credential.expiresIn);
+        await ValueCache.set('CoralApi', session.nso, session.data.credential.expiresIn);
 
-        await ValueCache.set('CoralSession', session);
+        return session.nso;
+    }
 
-        return session;
+    async getCoralAuthData(): Promise<CoralAuthData> {
+        const cache = await ValueCache.get('CoralAuthData');
+
+        if (cache == null) {
+            const session = await CoralApi.createWithSessionToken(this.NINTENDO_TOKEN);
+
+            // ついでに更新
+            await ValueCache.set('CoralApi', session.nso, session.data.credential.expiresIn);
+
+            await ValueCache.set('CoralAuthData', session.data);
+
+            return session.data;
+        }
+
+        return JSON.parse(cache.value) as CoralAuthData;
     }
 }
 
