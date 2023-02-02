@@ -37,7 +37,7 @@ interface Stage {
     name: string;
 }
 
-export function removeAllCredentials(stageSchedule: StageScheduleQuery_730cd98): StageSchedule {
+export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_730cd98): StageSchedule {
     const bankara = removeBankaraScheduleCredentials(stageSchedule.bankaraSchedules);
     const regular = removeRegularScheduleCredentials(stageSchedule.regularSchedules);
     const salmon = removeSalmonRunScheduleCredentials(stageSchedule.coopGroupingSchedule);

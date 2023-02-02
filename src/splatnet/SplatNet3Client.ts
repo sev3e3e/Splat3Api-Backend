@@ -2,7 +2,7 @@ import SplatNet3Api from 'nxapi/splatnet3';
 import { ValueCache } from '../cache/Cache.js';
 import { Auth } from './Auth.js';
 import {
-    removeAllCredentials,
+    removeAllScheduleCredentials,
     SalmonRunSchedule,
     Schedule,
     StageSchedule,
@@ -58,7 +58,7 @@ class Splatnet3Client {
 
             const now = dayjs().tz();
 
-            const removed = removeAllCredentials(schedules.data);
+            const removed = removeAllScheduleCredentials(schedules.data);
 
             // credentialを消したデータをキャッシュする
             await ValueCache.set('Schedules', removed, dayjs.tz(startTime).diff(now, 'second'));
