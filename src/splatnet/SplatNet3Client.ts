@@ -14,13 +14,17 @@ import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 
 import * as fs from 'fs';
-import { DetailTabViewXRankingArRefetchQuery, xRankingPlayerData } from '../types/XRankings.js';
+import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
 import { Logger } from 'winston';
 import { CreateLogger } from '../log/winston.js';
 import {
     removeBankaraScheduleCredentials,
     removeSalmonRunScheduleCredentials,
 } from './data/credentialRemovers/ScheduleCredentialRemover.js';
+import {
+    CredentialRemovedXRankingPlayerData,
+    removeXRankingPlayerDataCredentials,
+} from './data/credentialRemovers/XRankingCredentialRemover.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -140,29 +144,59 @@ class Splatnet3Client {
         }
     }
 
-    async getXRankings() {
+    // TODO: season id自動取得
+    // seasonが変わるたびに手動で更新してられない....
+    async getXRankings(_mode: 'area' | 'tower' | 'rainmaker' | 'clam'): Promise<CredentialRemovedXRankingPlayerData[]> {
         // WFJhbmtpbmdTZWFzb24tcDoy
 
-        // 型拡張の方法ないのかな・・・
+        // TODO: ライブラリの型 overwrite
         let cursor: string | null = 'null';
-        let datas: xRankingPlayerData[] = [];
+        let datas: CredentialRemovedXRankingPlayerData[] = [];
 
         for (let i = 1; i <= 5; i++) {
             while (true) {
                 this.Logger.info(`[getXRankings]page ${i}, cursor: ${cursor}`);
 
-                const data = (await this.apiClient.persistedQuery(RequestId.DetailTabViewXRankingArRefetchQuery, {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
+                let query: string;
+                let mode: Mode;
+
+                switch (_mode) {
+                    case 'area':
+                        query = RequestId.DetailTabViewXRankingArRefetchQuery;
+                        mode = Mode.Area;
+                        break;
+
+                    case 'clam':
+                        query = RequestId.DetailTabViewXRankingClRefetchQuery;
+                        mode = Mode.Clam;
+                        break;
+                    case 'rainmaker':
+                        query = RequestId.DetailTabViewXRankingGlRefetchQuery;
+                        mode = Mode.Rainmaker;
+                        break;
+
+                    case 'tower':
+                        query = RequestId.DetailTabViewXRankingLfRefetchQuery;
+                        mode = Mode.Tower;
+                        break;
+                }
+
+                const data = (await this.apiClient.persistedQuery(query, {
                     cursor: cursor,
                     first: 25,
                     id: 'WFJhbmtpbmdTZWFzb24tcDoy',
                     page: i,
-                })) as unknown as DetailTabViewXRankingArRefetchQuery;
+                })) as unknown as DetailTabViewXRankingRefetchQuery;
 
-                const playerDatas = data.data.node.xRankingAr.edges.map((edge) => edge.node);
+                const playerDatas = data.data.node[mode]!.edges.map((edge) =>
+                    removeXRankingPlayerDataCredentials(edge.node)
+                );
 
                 datas = datas.concat(playerDatas);
 
-                const pageInfo = data.data.node.xRankingAr.pageInfo;
+                const pageInfo = data.data.node[mode]!.pageInfo;
 
                 if (pageInfo.hasNextPage == false) {
                     cursor = null;
@@ -175,20 +209,7 @@ class Splatnet3Client {
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
-        fs.writeFileSync('arRankings.json', JSON.stringify(datas));
-
-        // while (true) {
-        //     // TODO: 2023-02-01 09:51:29(水曜日) ライブラリの実装が間違えてるのでXRankingを自前で実装する
-        //     // // XrankingDetailQuery -> DetailTabViewXRankingArRefetchQuery
-        //     // // 2ページ目からはRefetchのみ pageが増えてcursorがnull
-        //     // XRankingDetailQueryは各武器TOPのデータだった
-        //     // const data = (await this.apiClient.getXRankingDetailPagination(
-        //     //     'WFJhbmtpbmdTZWFzb24tcDoy',
-        //     //     XRankingLeaderboardType.X_RANKING,
-        //     //     XRankingLeaderboardRule.SPLAT_ZONES,
-        //     //     cursor
-        //     // )) as unknown as DetailTabViewXRankingArRefetchQuery;
-        // }
+        return datas;
     }
 }
 

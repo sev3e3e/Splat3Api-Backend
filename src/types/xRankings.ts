@@ -106,21 +106,31 @@ interface PageInfo {
     hasNextPage: boolean;
 }
 
-interface XRankingAr {
+interface XRanking {
     edges: Edge[];
     pageInfo: PageInfo;
 }
 
-interface Node {
-    __typename: string;
-    xRankingAr: XRankingAr;
+export enum Mode {
+    Area = 'xRankingAr',
+    Rainmaker = 'xRankingGl',
+    Clam = 'xRankingCl',
+    Tower = 'xRankingLf',
+}
+
+type Node = {
+    [key in Mode]?: XRanking;
+};
+
+interface _Node {
     id: string;
+    __typename: string;
 }
 
 interface Data {
-    node: Node;
+    node: Node & _Node;
 }
 
-export interface DetailTabViewXRankingArRefetchQuery {
+export interface DetailTabViewXRankingRefetchQuery {
     data: Data;
 }
