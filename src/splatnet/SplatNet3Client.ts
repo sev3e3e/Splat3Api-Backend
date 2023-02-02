@@ -2,9 +2,9 @@ import SplatNet3Api from 'nxapi/splatnet3';
 import { ValueCache } from '../cache/Cache.js';
 import { Auth } from './Auth.js';
 import {
+    removeAllCredentials,
     SalmonRunSchedule,
     Schedule,
-    scheduleCredentialRemover,
     StageSchedule,
 } from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { RequestId } from 'splatnet3-types/splatnet3';
@@ -17,6 +17,10 @@ import * as fs from 'fs';
 import { DetailTabViewXRankingArRefetchQuery, xRankingPlayerData } from '../types/XRankings.js';
 import { Logger } from 'winston';
 import { CreateLogger } from '../log/winston.js';
+import {
+    removeBankaraScheduleCredentials,
+    removeSalmonRunScheduleCredentials,
+} from './data/credentialRemovers/ScheduleCredentialRemover.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -54,7 +58,7 @@ class Splatnet3Client {
 
             const now = dayjs().tz();
 
-            const removed = scheduleCredentialRemover.removeAllCredentials(schedules.data);
+            const removed = removeAllCredentials(schedules.data);
 
             // credentialを消したデータをキャッシュする
             await ValueCache.set('Schedules', removed, dayjs.tz(startTime).diff(now, 'second'));
@@ -73,9 +77,7 @@ class Splatnet3Client {
         if (cache == null) {
             const schedules = await this.apiClient.getSchedules();
 
-            const converted = scheduleCredentialRemover.removeBankaraScheduleCredentials(
-                schedules.data.bankaraSchedules
-            );
+            const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
 
             // TTL設定
             // 最新のスケジュールの終了をTTL
@@ -99,9 +101,7 @@ class Splatnet3Client {
         if (cache == null) {
             const schedules = await this.apiClient.getSchedules();
 
-            const converted = scheduleCredentialRemover.removeBankaraScheduleCredentials(
-                schedules.data.bankaraSchedules
-            );
+            const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
 
             // TTL設定
             // 最新のスケジュールの終了をTTL
@@ -124,9 +124,7 @@ class Splatnet3Client {
         if (cache == null) {
             const schedules = await this.apiClient.getSchedules();
 
-            const salmonRunSchedules = scheduleCredentialRemover.removeSalmonRunScheduleCredentials(
-                schedules.data.coopGroupingSchedule
-            );
+            const salmonRunSchedules = removeSalmonRunScheduleCredentials(schedules.data.coopGroupingSchedule);
 
             const diff = dayjs(salmonRunSchedules[0].startTime).diff(dayjs(), 'second');
 
