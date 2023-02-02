@@ -7,10 +7,16 @@ import {
     scheduleCredentialRemover,
     StageSchedule,
 } from './data/credentialRemovers/ScheduleCredentialRemover.js';
+import { RequestId } from 'splatnet3-types/splatnet3';
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+
+import * as fs from 'fs';
+import { DetailTabViewXRankingArRefetchQuery, xRankingPlayerData } from '../types/XRankings.js';
+import { Logger } from 'winston';
+import { CreateLogger } from '../log/winston.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,7 +25,10 @@ dayjs.tz.setDefault('Asia/Tokyo');
 
 class Splatnet3Client {
     apiClient!: SplatNet3Api;
-    constructor() {}
+    Logger: Logger;
+    constructor() {
+        this.Logger = CreateLogger('SplatNet3Client');
+    }
 
     async initialize() {
         const api = await Auth.initialize();
@@ -131,6 +140,57 @@ class Splatnet3Client {
 
             return schedules;
         }
+    }
+
+    async getXRankings() {
+        // WFJhbmtpbmdTZWFzb24tcDoy
+
+        // 型拡張の方法ないのかな・・・
+        let cursor: string | null = 'null';
+        let datas: xRankingPlayerData[] = [];
+
+        for (let i = 1; i <= 5; i++) {
+            while (true) {
+                this.Logger.info(`[getXRankings]page ${i}, cursor: ${cursor}`);
+
+                const data = (await this.apiClient.persistedQuery(RequestId.DetailTabViewXRankingArRefetchQuery, {
+                    cursor: cursor,
+                    first: 25,
+                    id: 'WFJhbmtpbmdTZWFzb24tcDoy',
+                    page: i,
+                })) as unknown as DetailTabViewXRankingArRefetchQuery;
+
+                const playerDatas = data.data.node.xRankingAr.edges.map((edge) => edge.node);
+
+                datas = datas.concat(playerDatas);
+
+                const pageInfo = data.data.node.xRankingAr.pageInfo;
+
+                if (pageInfo.hasNextPage == false) {
+                    cursor = null;
+                    break;
+                } else {
+                    cursor = pageInfo.endCursor;
+                }
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+
+        fs.writeFileSync('arRankings.json', JSON.stringify(datas));
+
+        // while (true) {
+        //     // TODO: 2023-02-01 09:51:29(水曜日) ライブラリの実装が間違えてるのでXRankingを自前で実装する
+        //     // // XrankingDetailQuery -> DetailTabViewXRankingArRefetchQuery
+        //     // // 2ページ目からはRefetchのみ pageが増えてcursorがnull
+        //     // XRankingDetailQueryは各武器TOPのデータだった
+        //     // const data = (await this.apiClient.getXRankingDetailPagination(
+        //     //     'WFJhbmtpbmdTZWFzb24tcDoy',
+        //     //     XRankingLeaderboardType.X_RANKING,
+        //     //     XRankingLeaderboardRule.SPLAT_ZONES,
+        //     //     cursor
+        //     // )) as unknown as DetailTabViewXRankingArRefetchQuery;
+        // }
     }
 }
 
