@@ -1,13 +1,6 @@
 import StageScheduleQuery_730cd98 from '../../../../node_modules/splatnet3-types/dist/generated/730cd98e84f1030d3e9ac86b6f1aae13.js';
 
 import dayjs from 'dayjs';
-import timezone from 'dayjs/plugin/timezone.js';
-import utc from 'dayjs/plugin/utc.js';
-
-dayjs.extend(timezone);
-dayjs.extend(utc);
-
-dayjs.tz.setDefault('Asia/Tokyo');
 
 export interface StageSchedule {
     regularSchedules: Schedule[];
@@ -81,8 +74,8 @@ export function removeSalmonRunScheduleCredentials(
         const weapons = node.setting.weapons.map((weapon) => weapon.name);
 
         return {
-            startTime: dayjs(startTime).tz().toDate(),
-            endTime: dayjs(endTime).tz().toDate(),
+            startTime: dayjs(startTime).toDate(),
+            endTime: dayjs(endTime).toDate(),
             stage: stage,
             weapons: weapons,
         };
@@ -114,8 +107,8 @@ function _parseSchedules(anySchedules: any, matchType: 'regular' | 'bankara' | '
 
         const rule = node[settingsPropertyName]['vsRule']['name'];
         const schedule: Schedule = {
-            startTime: startTime,
-            endTime: endTime,
+            startTime: dayjs(startTime).toDate(),
+            endTime: dayjs(endTime).toDate(),
             rule: rule,
             stages: [stage1, stage2],
         };
@@ -165,14 +158,14 @@ function _parseBankaraSchedules(bankaraSchedulesJson: StageScheduleQuery_730cd98
         const challengeRule = currentMatchSettings[0]['vsRule']['name'];
         const openRule = currentMatchSettings[1]['vsRule']['name'];
         challengeSchedules.push({
-            startTime: dayjs(startTime).tz().toDate(),
-            endTime: dayjs(endTime).tz().toDate(),
+            startTime: dayjs(startTime).toDate(),
+            endTime: dayjs(endTime).toDate(),
             rule: challengeRule,
             stages: [challengeStage1, challengeStage2],
         });
         openSchedules.push({
-            startTime: dayjs(startTime).tz().toDate(),
-            endTime: dayjs(endTime).tz().toDate(),
+            startTime: dayjs(startTime).toDate(),
+            endTime: dayjs(endTime).toDate(),
             rule: openRule,
             stages: [openStage1, openStage2],
         });

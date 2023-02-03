@@ -10,8 +10,6 @@ import {
 import { RequestId } from 'splatnet3-types/splatnet3';
 
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import timezone from 'dayjs/plugin/timezone.js';
 
 import * as fs from 'fs';
 import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
@@ -25,11 +23,6 @@ import {
     CredentialRemovedXRankingPlayerData,
     removeXRankingPlayerDataCredentials,
 } from './data/credentialRemovers/XRankingCredentialRemover.js';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-dayjs.tz.setDefault('Asia/Tokyo');
 
 class Splatnet3Client {
     apiClient!: SplatNet3Api;
@@ -137,7 +130,7 @@ class Splatnet3Client {
 
         for (let i = 1; i <= 5; i++) {
             while (true) {
-                this.Logger.info(`[getXRankings]page ${i}, cursor: ${cursor}`);
+                this.Logger.debug(`[getXRankings]page ${i}, cursor: ${cursor}`);
 
                 await new Promise((resolve) => setTimeout(resolve, 500));
 
