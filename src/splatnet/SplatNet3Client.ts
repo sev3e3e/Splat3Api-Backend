@@ -49,29 +49,11 @@ class Splatnet3Client {
     }
 
     async getAllSchedules() {
-        // check caches
-        const cache = await ValueCache.get('Schedules');
+        const schedules = await this.apiClient.getSchedules();
 
-        // cacheがnullか、TTLが指定よりも小さかったら更新する
-        if (cache == null || cache.TTL <= 600) {
-            const schedules = await this.apiClient.getSchedules();
+        const removed = removeAllScheduleCredentials(schedules.data);
 
-            // 最終スケジュールの始まり == データがもうない限界のStartTimeをTTLとする
-            const startTime =
-                schedules.data.bankaraSchedules.nodes[schedules.data.bankaraSchedules.nodes.length - 1].startTime;
-
-            const now = dayjs().tz();
-
-            const removed = removeAllScheduleCredentials(schedules.data);
-
-            // credentialを消したデータをキャッシュする
-            await ValueCache.set('Schedules', removed, dayjs.tz(startTime).diff(now, 'second'));
-
-            return removed;
-        }
-
-        // キャッシュがあってTTLも十分であればそのままキャッシュを返す
-        return JSON.parse(cache.value) as StageSchedule;
+        return removed;
     }
 
     async getOpenBankaraSchedules() {
