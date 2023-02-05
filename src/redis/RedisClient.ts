@@ -1,6 +1,6 @@
-import { createClient } from "redis";
+import { createClient } from 'redis';
 
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 const REDIS_USER = process.env.REDIS_USER;
@@ -12,6 +12,6 @@ const client = createClient({
     url: `redis://${REDIS_USER}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}`,
 });
 
-await client.connect();
+// await client.connect();
 
 export const RedisClient = client;
