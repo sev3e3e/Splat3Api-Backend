@@ -2,7 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "target": "es2020",
-        "module": "ESNext",
+        "module": "Node16",
         "moduleResolution": "Node16",
         // "allowSyntheticDefaultImports": true,
         "declaration": true,
@@ -16,7 +16,8 @@
         "allowJs": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "types": ["vitest/globals"]
     },
     "include": ["src"],
     "exclude": ["./src/tests/"]
