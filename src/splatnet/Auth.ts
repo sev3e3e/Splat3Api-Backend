@@ -3,11 +3,9 @@ import SplatNet3Api, { SplatNet3AuthData } from 'nxapi/splatnet3';
 import winston from 'winston';
 import { CreateLogger } from '../log/winston.js';
 import { ValueCache } from '../cache/Cache.js';
-import { ReduceCacheExpiration } from '../utils/util.js';
 
 export class Authentication {
     NINTENDO_TOKEN: string;
-    // SPLATOON3_SERVICE_ID: number;
     Logger: winston.Logger;
 
     constructor() {
@@ -15,12 +13,7 @@ export class Authentication {
             throw new Error('NintendoTokenがセットされていません。');
         }
 
-        if (!process.env.SPLATOON3_SERVICE_ID) {
-            throw new Error('Splatoon3のWebService IDがセットされていません。');
-        }
-
         this.NINTENDO_TOKEN = process.env.NINTENDO_TOKEN;
-        // this.SPLATOON3_SERVICE_ID = parseInt(process.env.SPLATOON3_SERVICE_ID);
         this.Logger = CreateLogger('Auth');
     }
 
@@ -87,7 +80,3 @@ export class Authentication {
         return JSON.parse(cache.value) as CoralAuthData;
     }
 }
-
-const auth = new Authentication();
-
-export const Auth = auth;
