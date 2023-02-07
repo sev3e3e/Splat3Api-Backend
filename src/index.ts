@@ -1,13 +1,20 @@
-// import { Logger } from "./log/winston.js";
+// https://stackoverflow.com/a/67461142
+import { Context } from '@google-cloud/functions-framework';
+import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
+
 import { RedisClient } from './redis/RedisClient.js';
 
 import { CreateLogger } from './log/winston.js';
-import { splatnet3ApiClient } from './splatnet/SplatNet3Client.js';
+import { getAllSchedules, getXRankings } from './splatnet/SplatNet3Client.js';
 
 import * as fs from 'fs';
 import { ValueCache } from './cache/Cache.js';
 
 import dayjs from 'dayjs';
+import { Authentication } from './splatnet/Auth.js';
+
+// !: Import itself for testing
+import * as main from './index.js';
 
 const Logger = CreateLogger('Index');
 
@@ -20,20 +27,33 @@ const Logger = CreateLogger('Index');
 // 定期的に実行するやつはpubsub trigger
 // APIとして使うやつはhttp trigger
 // かな？
-const index = async () => {
-    const logger = CreateLogger('Index');
-    // const updater = new StageScheduleUpdater();
+export const index = async (_msg: PubsubMessage, context: Context) => {
+    if (!_msg.data) {
+        return;
+    }
 
-    // const json = await updater.update();
+    const message = Buffer.from(_msg.data as string, 'base64').toString();
 
-    const data = await splatnet3ApiClient.getXRankings('rainmaker');
+    // update schedule message
+    if (message == 'update schedule') {
+        await main.updateSchedule();
+    }
 
-    fs.writeFileSync('glglgl.json', JSON.stringify(data));
-    await RedisClient.disconnect();
+    // update x ranking
+    else if (message == 'update x-ranking') {
+        await main.updateXRanking();
+    }
 };
 
 export const updateSchedule = async () => {
-    // 2時間 + 5分
+    // 認証
+    const auth = new Authentication();
+    const api = await auth.initialize();
+
+    // logger
+    const logger = CreateLogger('UpdateSchedule');
+
+    // Time-To-Refresh: 2時間 + 5分
     const TTR = 600 + 7200;
 
     const cache = await ValueCache.get('Schedules');
@@ -47,7 +67,7 @@ export const updateSchedule = async () => {
         return;
     }
 
-    const schedules = await splatnet3ApiClient.getAllSchedules();
+    const schedules = await getAllSchedules(api, logger);
 
     // 最終スケジュールの始まり == データがもうない限界のStartTimeをTTLとする
     const startTime = schedules.bankaraChallengeSchedules[schedules.bankaraChallengeSchedules.length - 1].startTime;
@@ -55,6 +75,25 @@ export const updateSchedule = async () => {
     const diff = dayjs(startTime).diff(now, 'second');
 
     await ValueCache.set('Schedules', schedules, diff);
+
+    // bankara challengeのみ欲しい、とかもあるしれないので
+    // 各モードのみの値も保存しておく
+
+    // バンカラマッチ オープン
+    await ValueCache.set('bankara_open_schedule', schedules.bankaraOpenSchedules, diff);
+
+    // バンカラマッチ チャレンジ
+    await ValueCache.set('bankara_challenge_schedule', schedules.bankaraChallengeSchedules, diff);
+
+    // Xマッチ
+    await ValueCache.set('x_battle_schedule', schedules.xSchedules, diff);
+
+    // サーモンラン
+    await ValueCache.set('salmon_run_schedule', schedules.salmonRunSchedules, diff);
+
+    // リーグマッチ
+    // ?: (NSOバージョンアップでなくなるらしい) 2023-02-05 16:24:26(日曜日)
+    await ValueCache.set('league_battle_schedule', schedules.leagueSchedules, diff);
 
     await RedisClient.disconnect();
 
@@ -66,30 +105,34 @@ export const updateSchedule = async () => {
  * Cloud Functionsのリソース消費量とか無料枠の雰囲気がまだわかっていないため、並列実行はせず愚直にシングルインスタンスで実行する
  */
 export const updateXRanking = async () => {
+    // 認証
+    const auth = new Authentication();
+    const api = await auth.initialize();
+
     // area
     Logger.info('エリアのX Rankingを取得します。');
-    const area = await splatnet3ApiClient.getXRankings('area');
+    const area = await getXRankings(api, 'area');
     Logger.info('エリアのX Rankingをキャッシュします。');
     await ValueCache.set('AreaXRankings', area);
     await ValueCache.set('AreaXRankings:updatedAt', dayjs().format());
 
     // rainmaker
     Logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await splatnet3ApiClient.getXRankings('rainmaker');
+    const rainmaker = await getXRankings(api, 'rainmaker');
     Logger.info('ホコのX Rankingをキャッシュします。');
     await ValueCache.set('RainmakerXRankings', rainmaker);
     await ValueCache.set('RainmakerXRankings:updatedAt', dayjs().format());
 
     // clam
     Logger.info('アサリのX Rankingを取得します。');
-    const clam = await splatnet3ApiClient.getXRankings('clam');
+    const clam = await getXRankings(api, 'clam');
     Logger.info('アサリのX Rankingをキャッシュします。');
     await ValueCache.set('ClamXRankings', clam);
     await ValueCache.set('ClamXRankings:updatedAt', dayjs().format());
 
     // tower
     Logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await splatnet3ApiClient.getXRankings('tower');
+    const tower = await getXRankings(api, 'tower');
     Logger.info('ヤグラのX Rankingをキャッシュします。');
     await ValueCache.set('TowerXRankings', tower);
     await ValueCache.set('TowerXRankings:updatedAt', dayjs().format());
@@ -99,15 +142,6 @@ export const updateXRanking = async () => {
     Logger.info('全モードのX Rankingを取得しました。');
 };
 
-await updateXRanking();
-
-export { index };
-
-// const bulletToken = await Auth.getBulletToken();
-
-// console.log(JSON.stringify(coralApi.data, null, 2));
-
-// Logger.debug("test");
-// console.log(JSON.stringify(coralApi.data, null, 2));
-
-// fs.writeFileSync("stageSchedule.json", JSON.stringify(json));
+const _ = async () => {
+    await updateSchedule();
+};
