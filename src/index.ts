@@ -16,9 +16,8 @@ import { Authentication } from './splatnet/Auth.js';
 // !: Import itself for testing
 import * as main from './index.js';
 
-const Logger = CreateLogger('Index');
-
 // TODO: deploy to cloud functions
+// 2023-02-08 03:13:33(水曜日) ローカルで動作するテストコードもかけたのでついにデプロイする
 // キャッシュが切れる前に確実に実行したい
 // けどキャッシュが更新されていたら実行しない
 // 現在front-backとレポを分けているけど、正直それをする必要は無いかもしれない
@@ -31,6 +30,8 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
         return;
     }
+
+    // const logger = CreateLogger('Index');
 
     const message = Buffer.from(_msg.data as string, 'base64').toString();
 
@@ -46,12 +47,15 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
 };
 
 export const updateSchedule = async () => {
+    // logger
+    const logger = CreateLogger('UpdateSchedule');
+
+    // connect to redis
+    await RedisClient.connect();
+
     // 認証
     const auth = new Authentication();
     const api = await auth.initialize();
-
-    // logger
-    const logger = CreateLogger('UpdateSchedule');
 
     // Time-To-Refresh: 2時間 + 5分
     const TTR = 600 + 7200;
@@ -59,11 +63,11 @@ export const updateSchedule = async () => {
     const cache = await ValueCache.get('Schedules');
 
     if (cache == null) {
-        Logger.warn('Scheduleのキャッシュが存在しません。新たに取得します。');
+        logger.warn('Scheduleのキャッシュが存在しません。新たに取得します。');
     } else if (cache.TTL <= TTR) {
-        Logger.info(`ScheduleのTTLが残り${cache.TTL}秒です。キャッシュを更新します。`);
+        logger.info(`ScheduleのTTLが残り${cache.TTL}秒です。キャッシュを更新します。`);
     } else {
-        Logger.info(`ScheduleのTTLは残り${cache.TTL}秒、Refreshまでは残り${cache.TTL - TTR}秒です。更新はしません。`);
+        logger.info(`ScheduleのTTLは残り${cache.TTL}秒、Refreshまでは残り${cache.TTL - TTR}秒です。更新はしません。`);
         return;
     }
 
@@ -97,7 +101,7 @@ export const updateSchedule = async () => {
 
     await RedisClient.disconnect();
 
-    Logger.info(`Scheduleの更新完了です。TTL: ${diff}, TTR: ${diff - TTR}`);
+    logger.info(`Scheduleの更新完了です。TTL: ${diff}, TTR: ${diff - TTR}`);
 };
 
 /**
@@ -105,43 +109,44 @@ export const updateSchedule = async () => {
  * Cloud Functionsのリソース消費量とか無料枠の雰囲気がまだわかっていないため、並列実行はせず愚直にシングルインスタンスで実行する
  */
 export const updateXRanking = async () => {
+    // logger
+    const logger = CreateLogger('updateXRanking');
+
+    await RedisClient.connect();
+
     // 認証
     const auth = new Authentication();
     const api = await auth.initialize();
 
     // area
-    Logger.info('エリアのX Rankingを取得します。');
-    const area = await getXRankings(api, 'area');
-    Logger.info('エリアのX Rankingをキャッシュします。');
+    logger.info('エリアのX Rankingを取得します。');
+    const area = await getXRankings(api, 'area', logger);
+    logger.info('エリアのX Rankingをキャッシュします。');
     await ValueCache.set('AreaXRankings', area);
     await ValueCache.set('AreaXRankings:updatedAt', dayjs().format());
 
     // rainmaker
-    Logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await getXRankings(api, 'rainmaker');
-    Logger.info('ホコのX Rankingをキャッシュします。');
+    logger.info('ホコのX Rankingを取得します。');
+    const rainmaker = await getXRankings(api, 'rainmaker', logger);
+    logger.info('ホコのX Rankingをキャッシュします。');
     await ValueCache.set('RainmakerXRankings', rainmaker);
     await ValueCache.set('RainmakerXRankings:updatedAt', dayjs().format());
 
     // clam
-    Logger.info('アサリのX Rankingを取得します。');
-    const clam = await getXRankings(api, 'clam');
-    Logger.info('アサリのX Rankingをキャッシュします。');
+    logger.info('アサリのX Rankingを取得します。');
+    const clam = await getXRankings(api, 'clam', logger);
+    logger.info('アサリのX Rankingをキャッシュします。');
     await ValueCache.set('ClamXRankings', clam);
     await ValueCache.set('ClamXRankings:updatedAt', dayjs().format());
 
     // tower
-    Logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await getXRankings(api, 'tower');
-    Logger.info('ヤグラのX Rankingをキャッシュします。');
+    logger.info('ヤグラのX Rankingを取得します。');
+    const tower = await getXRankings(api, 'tower', logger);
+    logger.info('ヤグラのX Rankingをキャッシュします。');
     await ValueCache.set('TowerXRankings', tower);
     await ValueCache.set('TowerXRankings:updatedAt', dayjs().format());
 
     await RedisClient.disconnect();
 
-    Logger.info('全モードのX Rankingを取得しました。');
-};
-
-const _ = async () => {
-    await updateSchedule();
+    logger.info('全モードのX Rankingを取得しました。');
 };
