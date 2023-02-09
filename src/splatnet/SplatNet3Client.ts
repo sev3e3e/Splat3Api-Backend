@@ -117,7 +117,7 @@ export async function getXRankings(
 
     for (let i = 1; i <= 5; i++) {
         while (true) {
-            logger?.debug(`[getXRankings]page ${i}, cursor: ${cursor}`);
+            logger?.debug(`page ${i}, cursor: ${cursor}`);
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
