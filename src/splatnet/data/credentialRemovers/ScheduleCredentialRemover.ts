@@ -14,8 +14,8 @@ export interface StageSchedule {
 export interface Schedule {
     startTime: Date;
     endTime: Date;
-    stages: Stage[];
-    rule: string;
+    stages: Stage[] | null;
+    rule: string | null;
 }
 
 export interface SalmonRunSchedule {
@@ -84,33 +84,49 @@ export function removeSalmonRunScheduleCredentials(
     return schedules;
 }
 
-function _parseSchedules(anySchedules: any, matchType: 'regular' | 'bankara' | 'x' | 'league'): Schedule[] {
-    const nodes = anySchedules['nodes'];
+function _parseSchedules(anySchedules: any, matchType: 'regular' | 'x' | 'league'): Schedule[] {
+    // const _sche =
+    //     matchType == 'regular'
+    //         ? (anySchedules as StageScheduleQuery_730cd98['regularSchedules'])
+    //         : matchType == 'x'
+    //         ? (anySchedules as StageScheduleQuery_730cd98['xSchedules'])
+    //         : (anySchedules as StageScheduleQuery_730cd98['leagueSchedules']);
 
-    const schedules = nodes.map((node: any) => {
-        const settingsPropertyName = matchType === 'bankara' ? `${matchType}MatchSettings` : `${matchType}MatchSetting`;
+    const schedules: Schedule[] = anySchedules.nodes.map((node: any) => {
+        const settingsPropertyName =
+            matchType == 'regular' ? 'regularMatchSetting' : matchType == 'x' ? 'xMatchSetting' : 'leagueMatchSetting';
 
-        const startTime = node['startTime'];
-        const endTime = node['endTime'];
+        const startTime = dayjs(node['startTime']).toDate();
+        const endTime = dayjs(node['endTime']).toDate();
 
-        const _stages = node[settingsPropertyName]['vsStages'];
+        // fest中はMatchSettingがnull
+        const isExistsMatchSetting = settingsPropertyName in node && node[settingsPropertyName] != null;
 
-        const stage1: Stage = {
-            id: _stages[0]['vsStageId'],
-            name: _stages[0]['name'],
-        };
+        // matchSettingが無い時はrule, stageをnullにする
+        if (!isExistsMatchSetting) {
+            return {
+                startTime: startTime,
+                endTime: endTime,
+                rule: null,
+                stages: null,
+            };
+        }
 
-        const stage2: Stage = {
-            id: _stages[1]['vsStageId'],
-            name: _stages[1]['name'],
-        };
+        // ある場合は普通に読み込む
+        const stages: {
+            id: number;
+            name: string;
+        }[] = node[settingsPropertyName].vsStages.map((stage: any) => ({
+            id: stage.vsStageId,
+            name: stage.name,
+        }));
 
-        const rule = node[settingsPropertyName]['vsRule']['name'];
+        const rule: string = node[settingsPropertyName].vsRule.name;
         const schedule: Schedule = {
-            startTime: dayjs(startTime).toDate(),
-            endTime: dayjs(endTime).toDate(),
+            startTime: startTime,
+            endTime: endTime,
             rule: rule,
-            stages: [stage1, stage2],
+            stages: stages,
         };
         return schedule;
     });
@@ -122,53 +138,58 @@ function _parseBankaraSchedules(bankaraSchedulesJson: StageScheduleQuery_730cd98
     open: Schedule[];
     challenge: Schedule[];
 } {
-    const nodes = bankaraSchedulesJson['nodes'];
+    const nodes = bankaraSchedulesJson.nodes;
 
     const openSchedules: Schedule[] = [];
     const challengeSchedules: Schedule[] = [];
 
     for (const node of nodes) {
-        const startTime = node['startTime'];
-        const endTime = node['endTime'];
+        const isExistsBankaraMatchSettings = 'bankaraMatchSettings' in node && node.bankaraMatchSettings != null;
 
-        const currentMatchSettings = node['bankaraMatchSettings'];
+        const startTime = dayjs(node['startTime']).toDate();
+        const endTime = dayjs(node['endTime']).toDate();
 
-        const currentChallengeStages = currentMatchSettings[0]['vsStages'];
-        const currentOpenStages = currentMatchSettings[1]['vsStages'];
+        // バンカラマッチの設定がない時はrule, stageをnullにする
+        if (!isExistsBankaraMatchSettings) {
+            // フェス中のみ？
+            const nullSchedule = {
+                startTime: startTime,
+                endTime: endTime,
+                rule: null,
+                stages: null,
+            };
+            openSchedules.push(nullSchedule);
+            challengeSchedules.push(nullSchedule);
 
-        const challengeStage1 = {
-            id: currentChallengeStages[0]['vsStageId'],
-            name: currentChallengeStages[0]['name'],
-        };
+            continue;
+        }
 
-        const challengeStage2 = {
-            id: currentChallengeStages[1]['vsStageId'],
-            name: currentChallengeStages[1]['name'],
-        };
+        for (const matchSetting of node.bankaraMatchSettings) {
+            // stages
+            const stages = matchSetting.vsStages.map((stage) => ({
+                id: stage.vsStageId,
+                name: stage.name,
+            }));
 
-        const openStage1 = {
-            id: currentOpenStages[0]['vsStageId'],
-            name: currentOpenStages[0]['name'],
-        };
-        const openStage2 = {
-            id: currentOpenStages[1]['vsStageId'],
-            name: currentOpenStages[1]['name'],
-        };
+            // rule
+            const rule = matchSetting.vsRule.name;
 
-        const challengeRule = currentMatchSettings[0]['vsRule']['name'];
-        const openRule = currentMatchSettings[1]['vsRule']['name'];
-        challengeSchedules.push({
-            startTime: dayjs(startTime).toDate(),
-            endTime: dayjs(endTime).toDate(),
-            rule: challengeRule,
-            stages: [challengeStage1, challengeStage2],
-        });
-        openSchedules.push({
-            startTime: dayjs(startTime).toDate(),
-            endTime: dayjs(endTime).toDate(),
-            rule: openRule,
-            stages: [openStage1, openStage2],
-        });
+            if (matchSetting.mode == 'CHALLENGE') {
+                challengeSchedules.push({
+                    startTime: startTime,
+                    endTime: endTime,
+                    rule: rule,
+                    stages: stages,
+                });
+            } else if (matchSetting.mode == 'OPEN') {
+                openSchedules.push({
+                    startTime: startTime,
+                    endTime: endTime,
+                    rule: rule,
+                    stages: stages,
+                });
+            }
+        }
     }
 
     return {
