@@ -3,3 +3,4 @@ node_modules
 dist
 src/local/*.json
 yarn-error.log
+prod.env.yaml
