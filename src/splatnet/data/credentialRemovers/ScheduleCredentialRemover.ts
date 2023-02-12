@@ -7,7 +7,7 @@ export interface StageSchedule {
     bankaraChallengeSchedules: Schedule[];
     bankaraOpenSchedules: Schedule[];
     xSchedules: Schedule[];
-    leagueSchedules: Schedule[];
+    // leagueSchedules: Schedule[];
     salmonRunSchedules: SalmonRunSchedule[];
 }
 
@@ -21,8 +21,8 @@ export interface Schedule {
 export interface SalmonRunSchedule {
     startTime: Date;
     endTime: Date;
-    stage: string;
-    weapons: string[];
+    stage: string | null;
+    weapons: string[] | null;
 }
 
 interface Stage {
@@ -35,12 +35,12 @@ export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_7
     const regular = removeRegularScheduleCredentials(stageSchedule.regularSchedules);
     const salmon = removeSalmonRunScheduleCredentials(stageSchedule.coopGroupingSchedule);
     const x = removeXScheduleCredentials(stageSchedule.xSchedules);
-    const league = removeLeagueScheduleCredentials(stageSchedule.leagueSchedules);
+    // const league = removeLeagueScheduleCredentials(stageSchedule.leagueSchedules);
 
     return {
         bankaraChallengeSchedules: bankara.challenge,
         bankaraOpenSchedules: bankara.open,
-        leagueSchedules: league,
+        // leagueSchedules: league,
         regularSchedules: regular,
         salmonRunSchedules: salmon,
         xSchedules: x,
@@ -68,10 +68,22 @@ export function removeSalmonRunScheduleCredentials(
 ) {
     const nodes = salmonRunSchedule.regularSchedules.nodes;
     const schedules: SalmonRunSchedule[] = nodes.map((node) => {
-        const startTime = node['startTime'];
-        const endTime = node['endTime'];
-        const stage = node.setting.coopStage.name;
-        const weapons = node.setting.weapons.map((weapon) => weapon.name);
+        const isExistsSetting = 'setting' in node && node.setting != null;
+
+        const startTime = dayjs(node['startTime']).toDate();
+        const endTime = dayjs(node['endTime']).toDate();
+
+        if (!isExistsSetting) {
+            return {
+                startTime: dayjs(startTime).toDate(),
+                endTime: dayjs(endTime).toDate(),
+                stage: null,
+                weapons: null,
+            };
+        }
+
+        const stage = node.setting!.coopStage.name;
+        const weapons = node.setting!.weapons.map((weapon) => weapon.name);
 
         return {
             startTime: dayjs(startTime).toDate(),

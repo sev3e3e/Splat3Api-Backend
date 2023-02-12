@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { RedisClient } from '../redis/RedisClient.js';
 
 export interface CacheItem {

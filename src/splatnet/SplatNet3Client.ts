@@ -25,6 +25,12 @@ export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | 
     const schedules = await apiClient.getSchedules();
     logger?.debug('Scheduleの取得が完了しました');
 
+    // 念のため生Scheduleもキャッシュしておく
+    // 認証情報とか含まれてるので取り扱い注意
+    logger?.debug('生のSchedulesをキャッシュします');
+    await ValueCache.set('RawSchedules', schedules);
+    logger?.debug('生のSchedulesをキャッシュしました');
+
     logger?.debug('Scheduleから認証情報を削除します');
     const removed = removeAllScheduleCredentials(schedules.data);
     logger?.debug('Scheduleの認証情報を削除しました');
