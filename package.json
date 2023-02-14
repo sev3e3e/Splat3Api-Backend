@@ -10,7 +10,7 @@
         "dev": "node --loader ts-node/esm ./src/index.ts",
         "devfn": "functions-framework --target=index --signature-type=event",
         "build": "tsc",
-        "deploy": "tsc && gcloud functions deploy index --runtime nodejs16 --trigger-topic=splat3 --env-vars-file prod.env.yaml",
+        "deploy": "tsc && gcloud functions deploy index --runtime nodejs16 --trigger-topic=splat3 --env-vars-file prod.env.yaml --region=asia-northeast1",
         "test": "vitest"
     },
     "dependencies": {
