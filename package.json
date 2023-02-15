@@ -10,7 +10,7 @@
         "dev": "node --loader ts-node/esm ./src/index.ts",
         "devfn": "functions-framework --target=index --signature-type=event",
         "build": "tsc",
-        "deploy": "tsc && gcloud functions deploy index --runtime nodejs16 --trigger-topic=splat3 --env-vars-file prod.env.yaml",
+        "deploy": "tsc && gcloud functions deploy index --runtime nodejs16 --trigger-topic=splat3 --env-vars-file prod.env.yaml --region=asia-northeast1",
         "test": "vitest"
     },
     "dependencies": {
@@ -19,7 +19,7 @@
         "dayjs": "^1.11.7",
         "dotenv": "^16.0.3",
         "nxapi": "1.6.0",
-        "redis": "^4.5.1",
+        "redis": "4.5.1",
         "winston": "^3.8.2"
     },
     "devDependencies": {
