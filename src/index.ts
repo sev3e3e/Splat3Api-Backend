@@ -68,6 +68,9 @@ export const updateSchedule = async () => {
         logger.info(`ScheduleのTTLが残り${cache.TTL}秒です。キャッシュを更新します。`);
     } else {
         logger.info(`ScheduleのTTLは残り${cache.TTL}秒、Refreshまでは残り${cache.TTL - TTR}秒です。更新はしません。`);
+
+        await RedisClient.disconnect();
+
         return;
     }
 
@@ -83,6 +86,9 @@ export const updateSchedule = async () => {
     // bankara challengeのみ欲しい、とかもあるしれないので
     // 各モードのみの値も保存しておく
 
+    // レギュラーマッチ
+    await ValueCache.set('regular_schedule', schedules.regularSchedules, diff);
+
     // バンカラマッチ オープン
     await ValueCache.set('bankara_open_schedule', schedules.bankaraOpenSchedules, diff);
 
@@ -97,7 +103,7 @@ export const updateSchedule = async () => {
 
     // リーグマッチ
     // ?: (NSOバージョンアップでなくなるらしい) 2023-02-05 16:24:26(日曜日)
-    await ValueCache.set('league_battle_schedule', schedules.leagueSchedules, diff);
+    // await ValueCache.set('league_battle_schedule', schedules.leagueSchedules, diff);
 
     await RedisClient.disconnect();
 
