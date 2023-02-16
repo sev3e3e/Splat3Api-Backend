@@ -173,21 +173,3 @@ export async function getXRankings(
 
     return datas;
 }
-
-/**
- * getInstance()とかでシングルトンを表現しようとしたけど
- * 結局使う側に無駄なコード書く必要あってダルいのでやめた
- */
-// class Splatnet3Client {
-//     apiClient!: SplatNet3Api;
-//     Logger: Logger;
-//     constructor() {
-//         this.Logger = CreateLogger('SplatNet3Client');
-//     }
-
-//     async initialize() {
-//         const api = await Auth.initialize();
-
-//         this.apiClient = api;
-//     }
-// }
