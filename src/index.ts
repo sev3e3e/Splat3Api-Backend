@@ -1,17 +1,12 @@
 // https://stackoverflow.com/a/67461142
 import { Context } from '@google-cloud/functions-framework';
 import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
-
 import { RedisClient } from './redis/RedisClient.js';
-
 import { CreateLogger } from './log/winston.js';
 import { getAllSchedules, getXRankings } from './splatnet/SplatNet3Client.js';
-
-import * as fs from 'fs';
 import { ValueCache } from './cache/Cache.js';
-
-import dayjs from 'dayjs';
 import { Authentication } from './splatnet/Auth.js';
+import dayjs from 'dayjs';
 
 // !: Import itself for testing
 import * as main from './index.js';
@@ -128,28 +123,65 @@ export const updateXRanking = async () => {
     logger.info('エリアのX Rankingを取得します。');
     const area = await getXRankings(api, 'area', logger);
     logger.info('エリアのX Rankingをキャッシュします。');
-    await ValueCache.set('AreaXRankings', area);
+
+    // await ValueCache.set('AreaXRankings', area);
+    await RedisClient.zAdd(
+        'AreaXRankings:data',
+        area.map((data) => {
+            return {
+                score: data.rank,
+                value: JSON.stringify(data),
+            };
+        })
+    );
     await ValueCache.set('AreaXRankings:updatedAt', dayjs().format());
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
     const rainmaker = await getXRankings(api, 'rainmaker', logger);
     logger.info('ホコのX Rankingをキャッシュします。');
-    await ValueCache.set('RainmakerXRankings', rainmaker);
+    // await ValueCache.set('RainmakerXRankings', rainmaker);
+    await RedisClient.zAdd(
+        'RainmakerXRankings:data',
+        rainmaker.map((data) => {
+            return {
+                score: data.rank,
+                value: JSON.stringify(data),
+            };
+        })
+    );
     await ValueCache.set('RainmakerXRankings:updatedAt', dayjs().format());
 
     // clam
     logger.info('アサリのX Rankingを取得します。');
     const clam = await getXRankings(api, 'clam', logger);
     logger.info('アサリのX Rankingをキャッシュします。');
-    await ValueCache.set('ClamXRankings', clam);
+    // await ValueCache.set('ClamXRankings', clam);
+    await RedisClient.zAdd(
+        'ClamXRankings:data',
+        clam.map((data) => {
+            return {
+                score: data.rank,
+                value: JSON.stringify(data),
+            };
+        })
+    );
     await ValueCache.set('ClamXRankings:updatedAt', dayjs().format());
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
     const tower = await getXRankings(api, 'tower', logger);
     logger.info('ヤグラのX Rankingをキャッシュします。');
-    await ValueCache.set('TowerXRankings', tower);
+    // await ValueCache.set('TowerXRankings', tower);
+    await RedisClient.zAdd(
+        'TowerXRankings:data',
+        tower.map((data) => {
+            return {
+                score: data.rank,
+                value: JSON.stringify(data),
+            };
+        })
+    );
     await ValueCache.set('TowerXRankings:updatedAt', dayjs().format());
 
     // 全てのrankingsをまとめたやつキャッシュ
@@ -165,3 +197,5 @@ export const updateXRanking = async () => {
 
     logger.info('全モードのX Rankingを取得しました。');
 };
+
+await updateXRanking();
