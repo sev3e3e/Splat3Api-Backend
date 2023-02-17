@@ -197,5 +197,3 @@ export const updateXRanking = async () => {
 
     logger.info('全モードのX Rankingを取得しました。');
 };
-
-await updateXRanking();
