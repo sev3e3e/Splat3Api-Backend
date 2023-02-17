@@ -11,22 +11,10 @@ import dayjs from 'dayjs';
 // !: Import itself for testing
 import * as main from './index.js';
 
-// TODO: deploy to cloud functions
-// 2023-02-08 03:13:33(水曜日) ローカルで動作するテストコードもかけたのでついにデプロイする
-// キャッシュが切れる前に確実に実行したい
-// けどキャッシュが更新されていたら実行しない
-// 現在front-backとレポを分けているけど、正直それをする必要は無いかもしれない
-// 分けるとGCP上で使うリソースも2つ分になるし、使うライブラリも重複しててbuild cache等が溜まっていってしまう
-
-// 定期的に実行するやつはpubsub trigger
-// APIとして使うやつはhttp trigger
-// かな？
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
         return;
     }
-
-    // const logger = CreateLogger('Index');
 
     const message = Buffer.from(_msg.data as string, 'base64').toString();
 
