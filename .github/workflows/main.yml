@@ -26,7 +26,7 @@ jobs:
               run: yarn --frozen-lockfile
               
             - name: Build Typescript 
-              run: yarn build --verbose
+              run: yarn build
 
             - name: Setup Google Cloud
               uses: 'google-github-actions/auth@v1'
