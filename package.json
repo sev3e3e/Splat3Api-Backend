@@ -2,7 +2,7 @@
     "type": "module",
     "name": "splat3api-backend",
     "version": "1.0.0",
-    "main": "dist/index.js",
+    "main": "./dist/index.js",
     "author": "medi",
     "license": "MIT",
     "private": false,
