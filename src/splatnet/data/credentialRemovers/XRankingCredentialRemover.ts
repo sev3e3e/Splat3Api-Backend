@@ -9,7 +9,6 @@ dayjs.extend(utc);
 dayjs.tz.setDefault('Asia/Tokyo');
 
 export interface CredentialRemovedXRankingPlayerData {
-    id: string;
     name: string;
     nameId: string;
     rank: number;
@@ -23,7 +22,6 @@ export interface CredentialRemovedXRankingPlayerData {
  */
 export function removeXRankingPlayerDataCredentials(data: xRankingPlayerData): CredentialRemovedXRankingPlayerData {
     return {
-        id: data.id,
         name: data.name,
         nameId: data.nameId,
         rank: data.rank,

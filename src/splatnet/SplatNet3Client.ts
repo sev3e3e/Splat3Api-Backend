@@ -1,4 +1,4 @@
-import SplatNet3Api from 'nxapi/splatnet3';
+import SplatNet3Api, { XRankingRegion } from 'nxapi/splatnet3';
 import { ValueCache } from '../cache/Cache.js';
 import {
     removeAllScheduleCredentials,
@@ -108,15 +108,12 @@ export async function getSalmonRunSchedules(apiClient: SplatNet3Api): Promise<Sa
     }
 }
 
-// TODO: season id自動取得
-// seasonが変わるたびに手動で更新してられない....
 export async function getXRankings(
     apiClient: SplatNet3Api,
     _mode: 'area' | 'tower' | 'rainmaker' | 'clam',
+    seasonId: string,
     logger: Logger | null = null
 ): Promise<CredentialRemovedXRankingPlayerData[]> {
-    // WFJhbmtpbmdTZWFzb24tcDoy
-
     // TODO: ライブラリの型 overwrite
     let cursor: string | null = 'null';
     let datas: CredentialRemovedXRankingPlayerData[] = [];
@@ -154,7 +151,7 @@ export async function getXRankings(
             const data = (await apiClient.persistedQuery(query, {
                 cursor: cursor,
                 first: 25,
-                id: 'WFJhbmtpbmdTZWFzb24tcDoy',
+                id: seasonId,
                 page: i,
             })) as unknown as DetailTabViewXRankingRefetchQuery;
 
@@ -178,4 +175,24 @@ export async function getXRankings(
     }
 
     return datas;
+}
+
+export async function getSeasonInfo(apiClient: SplatNet3Api, logger: Logger | null = null) {
+    logger?.debug('現在のSeason情報を取得します。');
+
+    // const atlantic = await apiClient.getXRanking(XRankingRegion.ATLANTIC);
+    const pacific = await apiClient.getXRanking(XRankingRegion.PACIFIC);
+
+    logger?.debug('Season情報の取得が完了しました。');
+
+    if (pacific.data.xRanking.currentSeason == null) {
+        return null;
+    }
+
+    return {
+        id: pacific.data.xRanking.currentSeason.id,
+        name: pacific.data.xRanking.currentSeason.name,
+        startTime: pacific.data.xRanking.currentSeason.startTime,
+        endTime: pacific.data.xRanking.currentSeason.endTime,
+    };
 }

@@ -3,7 +3,7 @@ import { Context } from '@google-cloud/functions-framework';
 import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { RedisClient } from './redis/RedisClient.js';
 import { CreateLogger } from './log/winston.js';
-import { getAllSchedules, getXRankings } from './splatnet/SplatNet3Client.js';
+import { getAllSchedules, getSeasonInfo, getXRankings } from './splatnet/SplatNet3Client.js';
 import { ValueCache } from './cache/Cache.js';
 import { Authentication } from './splatnet/Auth.js';
 import dayjs from 'dayjs';
@@ -107,9 +107,16 @@ export const updateXRanking = async () => {
     const auth = new Authentication();
     const api = await auth.initialize();
 
+    // get season info
+    const seasonInfo = await getSeasonInfo(api, logger);
+
+    if (seasonInfo == null) {
+        throw new Error('SeasonInfoが取得できませんでした。');
+    }
+
     // area
     logger.info('エリアのX Rankingを取得します。');
-    const area = await getXRankings(api, 'area', logger);
+    const area = await getXRankings(api, 'area', seasonInfo.id, logger);
     logger.info('エリアのX Rankingをキャッシュします。');
 
     // await ValueCache.set('AreaXRankings', area);
@@ -126,7 +133,7 @@ export const updateXRanking = async () => {
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await getXRankings(api, 'rainmaker', logger);
+    const rainmaker = await getXRankings(api, 'rainmaker', seasonInfo.id, logger);
     logger.info('ホコのX Rankingをキャッシュします。');
     // await ValueCache.set('RainmakerXRankings', rainmaker);
     await RedisClient.zAdd(
@@ -142,7 +149,7 @@ export const updateXRanking = async () => {
 
     // clam
     logger.info('アサリのX Rankingを取得します。');
-    const clam = await getXRankings(api, 'clam', logger);
+    const clam = await getXRankings(api, 'clam', seasonInfo.id, logger);
     logger.info('アサリのX Rankingをキャッシュします。');
     // await ValueCache.set('ClamXRankings', clam);
     await RedisClient.zAdd(
@@ -158,7 +165,7 @@ export const updateXRanking = async () => {
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await getXRankings(api, 'tower', logger);
+    const tower = await getXRankings(api, 'tower', seasonInfo.id, logger);
     logger.info('ヤグラのX Rankingをキャッシュします。');
     // await ValueCache.set('TowerXRankings', tower);
     await RedisClient.zAdd(
