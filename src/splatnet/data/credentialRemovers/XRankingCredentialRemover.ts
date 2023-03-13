@@ -1,31 +1,23 @@
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone.js';
 import utc from 'dayjs/plugin/utc.js';
-import { xRankingPlayerData } from '../../../types/xRankings.js';
-
+import { XRankingPlayerDataRaw } from '../../../types/xRankings.js';
+import { XRankingPlayerData } from '@sev3e3e/splat3api-client';
 dayjs.extend(timezone);
 dayjs.extend(utc);
 
 dayjs.tz.setDefault('Asia/Tokyo');
 
-export interface CredentialRemovedXRankingPlayerData {
-    name: string;
-    nameId: string;
-    rank: number;
-    xPower: number;
-    weapon: string;
-}
-
 /**
- * XRankingPlayerDataの認証情報を削除します。
- * @param data xRankingPlayerData
+ * 認証情報を削除します。
+ * @param rawData XRankingPlayerDataRaw
  */
-export function removeXRankingPlayerDataCredentials(data: xRankingPlayerData): CredentialRemovedXRankingPlayerData {
+export function removeXRankingPlayerDataCredentials(rawData: XRankingPlayerDataRaw): XRankingPlayerData {
     return {
-        name: data.name,
-        nameId: data.nameId,
-        rank: data.rank,
-        xPower: data.xPower,
-        weapon: data.weapon.name,
+        name: rawData.name,
+        nameId: rawData.nameId,
+        rank: rawData.rank,
+        xPower: rawData.xPower,
+        weapon: rawData.weapon.name,
     };
 }

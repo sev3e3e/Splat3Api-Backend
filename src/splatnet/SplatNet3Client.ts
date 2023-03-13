@@ -1,10 +1,6 @@
 import SplatNet3Api, { XRankingRegion } from 'nxapi/splatnet3';
 import { ValueCache } from '../cache/Cache.js';
-import {
-    removeAllScheduleCredentials,
-    SalmonRunSchedule,
-    Schedule,
-} from './data/credentialRemovers/ScheduleCredentialRemover.js';
+import { removeAllScheduleCredentials } from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { RequestId } from 'splatnet3-types/splatnet3';
 
 import dayjs from 'dayjs';
@@ -15,10 +11,8 @@ import {
     removeBankaraScheduleCredentials,
     removeSalmonRunScheduleCredentials,
 } from './data/credentialRemovers/ScheduleCredentialRemover.js';
-import {
-    CredentialRemovedXRankingPlayerData,
-    removeXRankingPlayerDataCredentials,
-} from './data/credentialRemovers/XRankingCredentialRemover.js';
+import { removeXRankingPlayerDataCredentials } from './data/credentialRemovers/XRankingCredentialRemover.js';
+import { SalmonRunSchedule, Schedule, XRankingPlayerData } from '@sev3e3e/splat3api-client';
 
 export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | null = null) => {
     logger?.debug('SplatNet3からScheduleを取得します');
@@ -113,10 +107,10 @@ export async function getXRankings(
     _mode: 'area' | 'tower' | 'rainmaker' | 'clam',
     seasonId: string,
     logger: Logger | null = null
-): Promise<CredentialRemovedXRankingPlayerData[]> {
+): Promise<XRankingPlayerData[]> {
     // TODO: ライブラリの型 overwrite
     let cursor: string | null = 'null';
-    let datas: CredentialRemovedXRankingPlayerData[] = [];
+    let datas: XRankingPlayerData[] = [];
 
     for (let i = 1; i <= 5; i++) {
         while (true) {

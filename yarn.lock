@@ -470,6 +470,11 @@
   resolved "https://registry.yarnpkg.com/@redis/time-series/-/time-series-1.0.4.tgz#af85eb080f6934580e4d3b58046026b6c2b18717"
   integrity sha512-ThUIgo2U/g7cCuZavucQTQzA9g9JbDDY2f64u3AbAoz/8vE2lt2U37LamDUVChhaDA3IRT9R6VvJwqnUfTJzng==
 
+"@sev3e3e/splat3api-client@0.0.18-alpha":
+  version "0.0.18-alpha"
+  resolved "https://registry.yarnpkg.com/@sev3e3e/splat3api-client/-/splat3api-client-0.0.18-alpha.tgz#175bd5a2df58bd0da5d1338c961e521211f869ba"
+  integrity sha512-ac56KpVf1053R/1c006o9/vug5Bn2GObaRA95I6BLxbsQs0MG3gj1dzQlb/hoY1yd/Ycu5L/EYWMg1YUdDyDxA==
+
 "@tootallnate/once@2":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"

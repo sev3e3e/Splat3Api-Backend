@@ -24,6 +24,7 @@
     },
     "devDependencies": {
         "@google-cloud/pubsub": "^3.3.0",
+        "@sev3e3e/splat3api-client": "0.0.18-alpha",
         "@types/node": "^18.11.18",
         "@types/redis-mock": "^0.17.1",
         "@typescript-eslint/eslint-plugin": "^5.49.0",

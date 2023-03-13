@@ -81,7 +81,7 @@ interface Nameplate {
     background: Background;
 }
 
-export interface xRankingPlayerData {
+export interface XRankingPlayerDataRaw {
     id: string;
     name: string;
     rank: number;
@@ -97,7 +97,7 @@ export interface xRankingPlayerData {
 }
 
 interface Edge {
-    node: xRankingPlayerData;
+    node: XRankingPlayerDataRaw;
     cursor: string;
 }
 
