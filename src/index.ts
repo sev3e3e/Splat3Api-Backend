@@ -180,13 +180,13 @@ export const updateXRanking = async () => {
     await ValueCache.set('TowerXRankings:updatedAt', dayjs().format());
 
     // 全てのrankingsをまとめたやつキャッシュ
-    logger.info('全てのrankingsをまとめてキャッシュします。');
-    await ValueCache.set('AllXRankings', {
-        clam: clam,
-        tower: tower,
-        rainmaker: rainmaker,
-        area: area,
-    });
+    // logger.info('全てのrankingsをまとめてキャッシュします。');
+    // await ValueCache.set('AllXRankings', {
+    //     clam: clam,
+    //     tower: tower,
+    //     rainmaker: rainmaker,
+    //     area: area,
+    // });
 
     await RedisClient.disconnect();
 
