@@ -10,5 +10,5 @@ updates:
     schedule:
       interval: "daily"
     allow:
-      dependency-name: "nxapi"
-      dependency-type: "direct"
+      - dependency-name: "nxapi"
+        dependency-type: "direct"
