@@ -2716,10 +2716,10 @@ normalize-path@^3.0.0, normalize-path@~3.0.0:
   resolved "https://registry.yarnpkg.com/normalize-path/-/normalize-path-3.0.0.tgz#0dcd69ff23a1c9b11fd0978316644a0388216a65"
   integrity sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==
 
-nxapi@1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/nxapi/-/nxapi-1.6.0.tgz#394934c980ce371e7638024230a0f9c3c6a4e4e8"
-  integrity sha512-U/Im+j1U/Oby8rKFAk1AeA2xYzEv7gyf1wzp1+oC6w5LJqt7bUwU5mdVX5Jojo7KlCz2/f42RHomTId2VTbSXg==
+nxapi@1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/nxapi/-/nxapi-1.6.1.tgz#8dabdaef61fdf09fd986cae018abc00c36627b81"
+  integrity sha512-fh0S2ztLWIus/M59YUltfhwZcH7yONwSP5mkujVpc3Ika0dKJhTfRuWdPu9OknQXBqDTsaUbIwC4cbrsxiCNcA==
   dependencies:
     body-parser "^1.20.1"
     cli-table "^0.3.11"
@@ -2735,7 +2735,7 @@ nxapi@1.6.0:
     node-notifier "^10.0.1"
     node-persist "^3.1.0"
     read "^1.0.7"
-    splatnet3-types "^0.2.20221212221842"
+    splatnet3-types "^0.2.20230227204004"
     supports-color "^8.1.1"
     tslib "^2.4.1"
     uuid "^8.3.2"
@@ -3376,10 +3376,10 @@ spdx-license-ids@^3.0.0:
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.12.tgz#69077835abe2710b65f03969898b6637b505a779"
   integrity sha512-rr+VVSXtRhO4OHbXUiAF7xW3Bo9DuuF6C5jH+q/x15j2jniycgKbxU09Hr0WqlSLUs4i4ltHGXqTe7VHclYWyA==
 
-splatnet3-types@^0.2.20221212221842:
-  version "0.2.20230125112953"
-  resolved "https://registry.yarnpkg.com/splatnet3-types/-/splatnet3-types-0.2.20230125112953.tgz#f74c3affcb093d8f414d5bb85f58eb5e4abba118"
-  integrity sha512-ZoyYHjRlq0ZIg8ZWVnQ6MYWSjEv7nVMgSImyDqho9taZS31yxrSj/xZer6teTSrCTGIabYDvx+MPEhAHg8Jbpw==
+splatnet3-types@^0.2.20230227204004:
+  version "0.2.20230227204004"
+  resolved "https://registry.yarnpkg.com/splatnet3-types/-/splatnet3-types-0.2.20230227204004.tgz#ec3f8ac96a6680a94f6aaeea23a61274a281b2db"
+  integrity sha512-FAY6pbUcrp5O8c49BNXSKxoyM3UlCrRx2AtA9Y3qlvqOLdHqwxtzcdzbk1b1hRam8ZcrxRzE/ii6ESRiPIAnZw==
 
 stack-trace@0.0.x:
   version "0.0.10"
