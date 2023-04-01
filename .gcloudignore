@@ -1,5 +1,19 @@
-*
-!dist/**
-!package*.json
-!yarn.lock
-!.
+# # ignore all
+# *
+
+# # whitelist
+# !.
+# !package*.json
+# !yarn.lock
+# !dist/**
+.git
+.github
+node_modules
+src
+.env*
+.eslintrc.json
+.prettierrc.json
+babel.config.json
+docker-compose.yml
+tsconfig.json
+vite.config.ts

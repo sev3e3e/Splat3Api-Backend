@@ -1,0 +1,54 @@
+name: Build and Publish
+
+on:
+    push:
+        branches:
+            - 'master'
+
+jobs:
+    build-and-publish:
+        name: Build and Publish
+        runs-on: ubuntu-latest
+        timeout-minutes: 3
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.ref }}
+
+            - name: Set Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16.x
+
+            - name: Install dependencies
+              run: yarn --frozen-lockfile
+
+            - name: Build Typescript
+              run: yarn build
+
+            - name: Setup Google Cloud
+              uses: 'google-github-actions/auth@v1'
+              with:
+                  credentials_json: ${{ secrets.GCP_CREDENTIAL }}
+
+            - id: Deploy
+              uses: 'google-github-actions/deploy-cloud-functions@v1'
+              with:
+                  name: 'splat3-api-backend'
+                  runtime: 'nodejs16'
+                  timeout: '300'
+                  memory_mb: '256'
+                  region: 'us-west1'
+                  entry_point: 'index'
+                  event_trigger_type: 'google.pubsub.topic.publish'
+                  event_trigger_resource: ${{ secrets.PUBSUB_TOPIC_NAME }}
+                  event_trigger_service: 'pubsub.googleapis.com'
+                  env_vars: |
+                      REDIS_HOST=${{ secrets.REDIS_HOST }}
+                      REDIS_PORT=${{ secrets.REDIS_PORT }}
+                      REDIS_USER=${{ secrets.REDIS_USER }}
+                      REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+                      NINTENDO_TOKEN=${{ secrets.NINTENDO_TOKEN }}
+                  deploy_timeout: '400'

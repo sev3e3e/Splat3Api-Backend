@@ -1,36 +1,10 @@
 import StageScheduleQuery_730cd98 from '../../../../node_modules/splatnet3-types/dist/generated/730cd98e84f1030d3e9ac86b6f1aae13.js';
 
+import { AllSchedules, SalmonRunSchedule, Schedule } from '@sev3e3e/splat3api-client';
+
 import dayjs from 'dayjs';
 
-export interface StageSchedule {
-    regularSchedules: Schedule[];
-    bankaraChallengeSchedules: Schedule[];
-    bankaraOpenSchedules: Schedule[];
-    xSchedules: Schedule[];
-    // leagueSchedules: Schedule[];
-    salmonRunSchedules: SalmonRunSchedule[];
-}
-
-export interface Schedule {
-    startTime: Date;
-    endTime: Date;
-    stages: Stage[] | null;
-    rule: string | null;
-}
-
-export interface SalmonRunSchedule {
-    startTime: Date;
-    endTime: Date;
-    stage: string | null;
-    weapons: string[] | null;
-}
-
-interface Stage {
-    id: number;
-    name: string;
-}
-
-export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_730cd98): StageSchedule {
+export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_730cd98): AllSchedules {
     const bankara = removeBankaraScheduleCredentials(stageSchedule.bankaraSchedules);
     const regular = removeRegularScheduleCredentials(stageSchedule.regularSchedules);
     const salmon = removeSalmonRunScheduleCredentials(stageSchedule.coopGroupingSchedule);
