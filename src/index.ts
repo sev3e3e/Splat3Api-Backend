@@ -101,6 +101,9 @@ export const updateXRanking = async () => {
     // logger
     const logger = CreateLogger('updateXRanking');
 
+    // getCurrentTime
+    const now = dayjs().format();
+
     await RedisClient.connect();
 
     // 認証
@@ -117,76 +120,74 @@ export const updateXRanking = async () => {
     // area
     logger.info('エリアのX Rankingを取得します。');
     const area = await getXRankings(api, 'area', seasonInfo.id, logger);
-    logger.info('エリアのX Rankingをキャッシュします。');
-
-    // await ValueCache.set('AreaXRankings', area);
-    await RedisClient.zAdd(
-        'AreaXRankings:data',
-        area.map((data) => {
-            return {
-                score: data.rank,
-                value: JSON.stringify(data),
-            };
-        })
-    );
-    await ValueCache.set('AreaXRankings:updatedAt', dayjs().format());
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
     const rainmaker = await getXRankings(api, 'rainmaker', seasonInfo.id, logger);
-    logger.info('ホコのX Rankingをキャッシュします。');
-    // await ValueCache.set('RainmakerXRankings', rainmaker);
-    await RedisClient.zAdd(
-        'RainmakerXRankings:data',
-        rainmaker.map((data) => {
-            return {
-                score: data.rank,
-                value: JSON.stringify(data),
-            };
-        })
-    );
-    await ValueCache.set('RainmakerXRankings:updatedAt', dayjs().format());
 
     // clam
     logger.info('アサリのX Rankingを取得します。');
     const clam = await getXRankings(api, 'clam', seasonInfo.id, logger);
-    logger.info('アサリのX Rankingをキャッシュします。');
-    // await ValueCache.set('ClamXRankings', clam);
-    await RedisClient.zAdd(
-        'ClamXRankings:data',
-        clam.map((data) => {
-            return {
-                score: data.rank,
-                value: JSON.stringify(data),
-            };
-        })
-    );
-    await ValueCache.set('ClamXRankings:updatedAt', dayjs().format());
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
     const tower = await getXRankings(api, 'tower', seasonInfo.id, logger);
-    logger.info('ヤグラのX Rankingをキャッシュします。');
-    // await ValueCache.set('TowerXRankings', tower);
-    await RedisClient.zAdd(
-        'TowerXRankings:data',
-        tower.map((data) => {
-            return {
-                score: data.rank,
-                value: JSON.stringify(data),
-            };
-        })
-    );
-    await ValueCache.set('TowerXRankings:updatedAt', dayjs().format());
 
-    // 全てのrankingsをまとめたやつキャッシュ
-    // logger.info('全てのrankingsをまとめてキャッシュします。');
-    // await ValueCache.set('AllXRankings', {
-    //     clam: clam,
-    //     tower: tower,
-    //     rainmaker: rainmaker,
-    //     area: area,
-    // });
+    logger.info('Redisに保存します。');
+
+    await RedisClient.multi()
+        .zAdd(
+            'AreaXRankings:temp',
+            area.map((data) => {
+                return {
+                    score: data.rank,
+                    value: JSON.stringify(data),
+                };
+            })
+        )
+        .zAdd(
+            'RainmakerXRankings:temp',
+            rainmaker.map((data) => {
+                return {
+                    score: data.rank,
+                    value: JSON.stringify(data),
+                };
+            })
+        )
+        .zAdd(
+            'ClamXRankings:temp',
+            clam.map((data) => {
+                return {
+                    score: data.rank,
+                    value: JSON.stringify(data),
+                };
+            })
+        )
+        .zAdd(
+            'TowerXRankings:temp',
+            tower.map((data) => {
+                return {
+                    score: data.rank,
+                    value: JSON.stringify(data),
+                };
+            })
+        )
+        // Area, Rainmaker, Clam, Towerのtempをdataにリネーム
+        .rename('AreaXRankings:temp', 'AreaXRankings:data')
+        .rename('RainmakerXRankings:temp', 'RainmakerXRankings:data')
+        .rename('ClamXRankings:temp', 'ClamXRankings:data')
+        .rename('TowerXRankings:temp', 'TowerXRankings:data')
+        // Area, Rainmaker, Clam, Towerのtempを削除
+        .del('AreaXRankings:temp')
+        .del('RainmakerXRankings:temp')
+        .del('ClamXRankings:temp')
+        .del('TowerXRankings:temp')
+        // Area, Rainmaker, Clam, TowerのUpdatedAtを更新
+        .set('AreaXRankings:updatedAt', now)
+        .set('RainmakerXRankings:updatedAt', now)
+        .set('ClamXRankings:updatedAt', now)
+        .set('TowerXRankings:updatedAt', now)
+        .exec();
 
     await RedisClient.disconnect();
 
