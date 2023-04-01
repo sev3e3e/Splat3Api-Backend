@@ -9,6 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+    target-branch: "dev"
     allow:
       - dependency-name: "nxapi"
         dependency-type: "direct"
