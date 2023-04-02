@@ -1,10 +1,10 @@
-import StageScheduleQuery_730cd98 from '../../../../node_modules/splatnet3-types/dist/generated/730cd98e84f1030d3e9ac86b6f1aae13.js';
+import { StageScheduleResult } from 'splatnet3-types/splatnet3';
 
 import { AllSchedules, SalmonRunSchedule, Schedule } from '@sev3e3e/splat3api-client';
 
 import dayjs from 'dayjs';
 
-export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_730cd98): AllSchedules {
+export function removeAllScheduleCredentials(stageSchedule: StageScheduleResult): AllSchedules {
     const bankara = removeBankaraScheduleCredentials(stageSchedule.bankaraSchedules);
     const regular = removeRegularScheduleCredentials(stageSchedule.regularSchedules);
     const salmon = removeSalmonRunScheduleCredentials(stageSchedule.coopGroupingSchedule);
@@ -21,25 +21,23 @@ export function removeAllScheduleCredentials(stageSchedule: StageScheduleQuery_7
     };
 }
 
-export function removeBankaraScheduleCredentials(bankaraSchedule: StageScheduleQuery_730cd98['bankaraSchedules']) {
+export function removeBankaraScheduleCredentials(bankaraSchedule: StageScheduleResult['bankaraSchedules']) {
     return _parseBankaraSchedules(bankaraSchedule);
 }
 
-export function removeRegularScheduleCredentials(regularSchedule: StageScheduleQuery_730cd98['regularSchedules']) {
+export function removeRegularScheduleCredentials(regularSchedule: StageScheduleResult['regularSchedules']) {
     return _parseSchedules(regularSchedule, 'regular');
 }
 
-export function removeXScheduleCredentials(xSchedule: StageScheduleQuery_730cd98['xSchedules']) {
+export function removeXScheduleCredentials(xSchedule: StageScheduleResult['xSchedules']) {
     return _parseSchedules(xSchedule, 'x');
 }
 
-export function removeLeagueScheduleCredentials(leagueSchedule: StageScheduleQuery_730cd98['leagueSchedules']) {
-    return _parseSchedules(leagueSchedule, 'league');
-}
+// export function removeLeagueScheduleCredentials(leagueSchedule: StageScheduleResult['leagueSchedules']) {
+//     return _parseSchedules(leagueSchedule, 'league');
+// }
 
-export function removeSalmonRunScheduleCredentials(
-    salmonRunSchedule: StageScheduleQuery_730cd98['coopGroupingSchedule']
-) {
+export function removeSalmonRunScheduleCredentials(salmonRunSchedule: StageScheduleResult['coopGroupingSchedule']) {
     const nodes = salmonRunSchedule.regularSchedules.nodes;
     const schedules: SalmonRunSchedule[] = nodes.map((node) => {
         const isExistsSetting = 'setting' in node && node.setting != null;
@@ -120,7 +118,7 @@ function _parseSchedules(anySchedules: any, matchType: 'regular' | 'x' | 'league
     return schedules;
 }
 
-function _parseBankaraSchedules(bankaraSchedulesJson: StageScheduleQuery_730cd98['bankaraSchedules']): {
+function _parseBankaraSchedules(bankaraSchedulesJson: StageScheduleResult['bankaraSchedules']): {
     open: Schedule[];
     challenge: Schedule[];
 } {
