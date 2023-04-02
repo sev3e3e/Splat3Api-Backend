@@ -66,9 +66,6 @@ export const updateSchedule = async () => {
 
     await ValueCache.set('Schedules', schedules, diff);
 
-    // bankara challengeのみ欲しい、とかもあるしれないので
-    // 各モードのみの値も保存しておく
-
     // レギュラーマッチ
     await ValueCache.set('regular_schedule', schedules.regularSchedules, diff);
 
