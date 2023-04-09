@@ -6,6 +6,7 @@ import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
 import { Logger } from 'winston';
 import { removeXRankingPlayerDataCredentials } from './data/credentialRemovers/XRankingCredentialRemover.js';
 import { XRankingPlayerData } from '@sev3e3e/splat3api-client';
+import retry from 'async-retry';
 
 export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | null = null) => {
     logger?.debug('SplatNet3からScheduleを取得します');
@@ -35,42 +36,57 @@ export async function getXRankings(
     let cursor: string | null = 'null';
     let datas: XRankingPlayerData[] = [];
 
+    let query: RequestId;
+    let mode: Mode;
+
+    switch (_mode) {
+        case 'area':
+            query = RequestId.DetailTabViewXRankingArRefetchQuery;
+            mode = Mode.Area;
+            break;
+
+        case 'clam':
+            query = RequestId.DetailTabViewXRankingClRefetchQuery;
+            mode = Mode.Clam;
+            break;
+        case 'rainmaker':
+            query = RequestId.DetailTabViewXRankingGlRefetchQuery;
+            mode = Mode.Rainmaker;
+            break;
+
+        case 'tower':
+            query = RequestId.DetailTabViewXRankingLfRefetchQuery;
+            mode = Mode.Tower;
+            break;
+    }
+
     for (let i = 1; i <= 5; i++) {
         while (true) {
             logger?.debug(`page ${i}, cursor: ${cursor}`);
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            let query: RequestId;
-            let mode: Mode;
+            // retryする
+            const data = await retry(
+                async () => {
+                    const data = (await apiClient.persistedQuery(query, {
+                        cursor: cursor,
+                        first: 25,
+                        id: seasonId,
+                        page: i,
+                    })) as unknown as DetailTabViewXRankingRefetchQuery;
 
-            switch (_mode) {
-                case 'area':
-                    query = RequestId.DetailTabViewXRankingArRefetchQuery;
-                    mode = Mode.Area;
-                    break;
-
-                case 'clam':
-                    query = RequestId.DetailTabViewXRankingClRefetchQuery;
-                    mode = Mode.Clam;
-                    break;
-                case 'rainmaker':
-                    query = RequestId.DetailTabViewXRankingGlRefetchQuery;
-                    mode = Mode.Rainmaker;
-                    break;
-
-                case 'tower':
-                    query = RequestId.DetailTabViewXRankingLfRefetchQuery;
-                    mode = Mode.Tower;
-                    break;
-            }
-
-            const data = (await apiClient.persistedQuery(query, {
-                cursor: cursor,
-                first: 25,
-                id: seasonId,
-                page: i,
-            })) as unknown as DetailTabViewXRankingRefetchQuery;
+                    return data;
+                },
+                {
+                    retries: 3,
+                    minTimeout: 5000,
+                    maxTimeout: 10000,
+                    onRetry(e, attempt) {
+                        logger?.warn(`retry ${attempt}回目: ${e}`);
+                    },
+                }
+            );
 
             const node = data.data.node;
 
