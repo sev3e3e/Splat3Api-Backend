@@ -5,11 +5,14 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "daily"
-    target-branch: "dev"
-    allow:
-      - dependency-name: "nxapi"
-        dependency-type: "direct"
+    - package-ecosystem: 'npm' # See documentation for possible values
+      directory: '/' # Location of package manifests
+      schedule:
+          interval: 'daily'
+      target-branch: 'dev'
+      allow:
+          - dependency-name: 'nxapi'
+            dependency-type: 'direct'
+
+          - dependency-name: 'splatnet3-types'
+            dependency-type: 'direct'
