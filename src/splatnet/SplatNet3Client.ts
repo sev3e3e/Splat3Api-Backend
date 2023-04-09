@@ -1,18 +1,11 @@
 import SplatNet3Api, { XRankingRegion } from 'nxapi/splatnet3';
-import { ValueCache } from '../cache/Cache.js';
 import { removeAllScheduleCredentials } from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { RequestId } from 'splatnet3-types/splatnet3';
 
-import dayjs from 'dayjs';
-
 import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
 import { Logger } from 'winston';
-import {
-    removeBankaraScheduleCredentials,
-    removeSalmonRunScheduleCredentials,
-} from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { removeXRankingPlayerDataCredentials } from './data/credentialRemovers/XRankingCredentialRemover.js';
-import { SalmonRunSchedule, Schedule, XRankingPlayerData } from '@sev3e3e/splat3api-client';
+import { XRankingPlayerData } from '@sev3e3e/splat3api-client';
 
 export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | null = null) => {
     logger?.debug('SplatNet3からScheduleを取得します');
@@ -32,76 +25,6 @@ export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | 
     return removed;
 };
 
-export async function getOpenBankaraSchedules(apiClient: SplatNet3Api, logger: Logger) {
-    // check caches
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
-
-        // TTL設定
-        // 最新のスケジュールの終了をTTL
-        // 0以下になったらキャッシュしない
-        const diff = dayjs(converted.open[0].endTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return converted.open;
-    } else {
-        return JSON.parse(cache.value) as Schedule[];
-    }
-}
-
-export async function getChallengeBankaraSchedules(apiClient: SplatNet3Api) {
-    // check caches
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
-
-        // TTL設定
-        // 最新のスケジュールの終了をTTL
-        // 0以下になったらキャッシュしない
-        const diff = dayjs(converted.challenge[0].endTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return converted.challenge;
-    } else {
-        return JSON.parse(cache.value) as Schedule[];
-    }
-}
-
-export async function getSalmonRunSchedules(apiClient: SplatNet3Api): Promise<SalmonRunSchedule[]> {
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const salmonRunSchedules = removeSalmonRunScheduleCredentials(schedules.data.coopGroupingSchedule);
-
-        const diff = dayjs(salmonRunSchedules[0].startTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return salmonRunSchedules;
-    } else {
-        const schedules = JSON.parse(cache.value);
-
-        return schedules;
-    }
-}
-
 export async function getXRankings(
     apiClient: SplatNet3Api,
     _mode: 'area' | 'tower' | 'rainmaker' | 'clam',
@@ -118,7 +41,7 @@ export async function getXRankings(
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            let query: string;
+            let query: RequestId;
             let mode: Mode;
 
             switch (_mode) {
@@ -149,9 +72,13 @@ export async function getXRankings(
                 page: i,
             })) as unknown as DetailTabViewXRankingRefetchQuery;
 
-            const playerDatas = data.data.node[mode]!.edges.map((edge) =>
-                removeXRankingPlayerDataCredentials(edge.node)
-            );
+            const node = data.data.node;
+
+            if (node == null) {
+                throw new Error(`${mode} node is null`);
+            }
+
+            const playerDatas = node[mode]!.edges.map((edge) => removeXRankingPlayerDataCredentials(edge.node));
 
             datas = datas.concat(playerDatas);
 
