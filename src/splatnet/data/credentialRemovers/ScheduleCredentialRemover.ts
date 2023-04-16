@@ -9,12 +9,10 @@ export function removeAllScheduleCredentials(stageSchedule: StageScheduleResult)
     const regular = removeRegularScheduleCredentials(stageSchedule.regularSchedules);
     const salmon = removeSalmonRunScheduleCredentials(stageSchedule.coopGroupingSchedule);
     const x = removeXScheduleCredentials(stageSchedule.xSchedules);
-    // const league = removeLeagueScheduleCredentials(stageSchedule.leagueSchedules);
 
     return {
         bankaraChallengeSchedules: bankara.challenge,
         bankaraOpenSchedules: bankara.open,
-        // leagueSchedules: league,
         regularSchedules: regular,
         salmonRunSchedules: salmon,
         xSchedules: x,
@@ -32,10 +30,6 @@ export function removeRegularScheduleCredentials(regularSchedule: StageScheduleR
 export function removeXScheduleCredentials(xSchedule: StageScheduleResult['xSchedules']) {
     return _parseSchedules(xSchedule, 'x');
 }
-
-// export function removeLeagueScheduleCredentials(leagueSchedule: StageScheduleResult['leagueSchedules']) {
-//     return _parseSchedules(leagueSchedule, 'league');
-// }
 
 export function removeSalmonRunScheduleCredentials(salmonRunSchedule: StageScheduleResult['coopGroupingSchedule']) {
     const nodes = salmonRunSchedule.regularSchedules.nodes;
@@ -69,13 +63,6 @@ export function removeSalmonRunScheduleCredentials(salmonRunSchedule: StageSched
 }
 
 function _parseSchedules(anySchedules: any, matchType: 'regular' | 'x' | 'league'): Schedule[] {
-    // const _sche =
-    //     matchType == 'regular'
-    //         ? (anySchedules as StageScheduleQuery_730cd98['regularSchedules'])
-    //         : matchType == 'x'
-    //         ? (anySchedules as StageScheduleQuery_730cd98['xSchedules'])
-    //         : (anySchedules as StageScheduleQuery_730cd98['leagueSchedules']);
-
     const schedules: Schedule[] = anySchedules.nodes.map((node: any) => {
         const settingsPropertyName =
             matchType == 'regular' ? 'regularMatchSetting' : matchType == 'x' ? 'xMatchSetting' : 'leagueMatchSetting';
