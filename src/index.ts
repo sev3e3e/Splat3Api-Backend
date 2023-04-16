@@ -38,7 +38,7 @@ export const updateSchedule = async () => {
 
     // 認証
     const auth = new Authentication();
-    const api = await auth.initialize();
+    const api = await auth.initialize(true);
 
     // Time-To-Refresh: 2時間 + 5分
     const TTR = 600 + 7200;
@@ -105,7 +105,7 @@ export const updateXRanking = async () => {
 
     // 認証
     const auth = new Authentication();
-    const api = await auth.initialize();
+    const api = await auth.initialize(true);
 
     // get season info
     const seasonInfo = await getSeasonInfo(api, logger);
