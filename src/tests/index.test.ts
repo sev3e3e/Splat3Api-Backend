@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeAll } from 'vitest';
 
 import * as main from '../index';
+import * as updateXRanking from '../updateXRanking';
 import { Authentication } from '../splatnet/Auth';
 import SplatNet3Api from 'nxapi/dist/api/splatnet3';
 import { StageScheduleResult } from 'splatnet3-types/dist/splatnet3';
@@ -31,7 +32,7 @@ describe('Index関数', () => {
     });
 
     test('"update x-ranking"とメッセージが来たらupdateXRanking()を呼ぶ', async () => {
-        vi.spyOn(main, 'updateXRanking').mockResolvedValueOnce();
+        vi.spyOn(updateXRanking, 'updateXRanking').mockResolvedValueOnce();
 
         const message = {
             data: Buffer.from('update x-ranking').toString('base64'),
@@ -39,7 +40,7 @@ describe('Index関数', () => {
 
         await main.index(message, {});
 
-        expect(main.updateXRanking).toHaveBeenCalled();
+        expect(updateXRanking).toHaveBeenCalled();
     });
 });
 
