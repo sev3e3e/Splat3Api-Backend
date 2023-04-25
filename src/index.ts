@@ -3,13 +3,16 @@ import { Context } from '@google-cloud/functions-framework';
 import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { RedisClient } from './redis/RedisClient.js';
 import { CreateLogger } from './log/winston.js';
-import { getAllSchedules, getSeasonInfo, getXRankings } from './splatnet/SplatNet3Client.js';
+import { getAllSchedules } from './splatnet/SplatNet3Client.js';
 import { ValueCache } from './cache/Cache.js';
 import { Authentication } from './splatnet/Auth.js';
 import dayjs from 'dayjs';
 
 // !: Import itself for testing
 import * as main from './index.js';
+
+import { archiveXRanking } from './archiveXRanking.js';
+import { updateXRanking } from './updateXRanking.js';
 
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
@@ -20,12 +23,17 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
 
     // update schedule message
     if (message == 'update schedule') {
-        await main.updateSchedule();
+        await updateSchedule();
     }
 
     // update x ranking
     else if (message == 'update x-ranking') {
-        await main.updateXRanking();
+        await updateXRanking();
+    }
+
+    // archive x ranking
+    else if (message == 'archive x-ranking') {
+        await archiveXRanking();
     }
 };
 
@@ -38,7 +46,7 @@ export const updateSchedule = async () => {
 
     // 認証
     const auth = new Authentication();
-    const api = await auth.initialize();
+    const api = await auth.initialize(true);
 
     // Time-To-Refresh: 2時間 + 5分
     const TTR = 600 + 7200;
@@ -66,9 +74,6 @@ export const updateSchedule = async () => {
 
     await ValueCache.set('Schedules', schedules, diff);
 
-    // bankara challengeのみ欲しい、とかもあるしれないので
-    // 各モードのみの値も保存しておく
-
     // レギュラーマッチ
     await ValueCache.set('regular_schedule', schedules.regularSchedules, diff);
 
@@ -91,105 +96,4 @@ export const updateSchedule = async () => {
     await RedisClient.disconnect();
 
     logger.info(`Scheduleの更新完了です。TTL: ${diff}, TTR: ${diff - TTR}`);
-};
-
-/**
- * 1時間ごとに更新らしい。
- * Cloud Functionsのリソース消費量とか無料枠の雰囲気がまだわかっていないため、並列実行はせず愚直にシングルインスタンスで実行する
- */
-export const updateXRanking = async () => {
-    // logger
-    const logger = CreateLogger('updateXRanking');
-
-    // getCurrentTime
-    const now = dayjs().format();
-
-    await RedisClient.connect();
-
-    // 認証
-    const auth = new Authentication();
-    const api = await auth.initialize();
-
-    // get season info
-    const seasonInfo = await getSeasonInfo(api, logger);
-
-    if (seasonInfo == null) {
-        throw new Error('SeasonInfoが取得できませんでした。');
-    }
-
-    // area
-    logger.info('エリアのX Rankingを取得します。');
-    const area = await getXRankings(api, 'area', seasonInfo.id, logger);
-
-    // rainmaker
-    logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await getXRankings(api, 'rainmaker', seasonInfo.id, logger);
-
-    // clam
-    logger.info('アサリのX Rankingを取得します。');
-    const clam = await getXRankings(api, 'clam', seasonInfo.id, logger);
-
-    // tower
-    logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await getXRankings(api, 'tower', seasonInfo.id, logger);
-
-    logger.info('Redisに保存します。');
-
-    await RedisClient.multi()
-        .zAdd(
-            'AreaXRankings:temp',
-            area.map((data) => {
-                return {
-                    score: data.rank,
-                    value: JSON.stringify(data),
-                };
-            })
-        )
-        .zAdd(
-            'RainmakerXRankings:temp',
-            rainmaker.map((data) => {
-                return {
-                    score: data.rank,
-                    value: JSON.stringify(data),
-                };
-            })
-        )
-        .zAdd(
-            'ClamXRankings:temp',
-            clam.map((data) => {
-                return {
-                    score: data.rank,
-                    value: JSON.stringify(data),
-                };
-            })
-        )
-        .zAdd(
-            'TowerXRankings:temp',
-            tower.map((data) => {
-                return {
-                    score: data.rank,
-                    value: JSON.stringify(data),
-                };
-            })
-        )
-        // Area, Rainmaker, Clam, Towerのtempをdataにリネーム
-        .rename('AreaXRankings:temp', 'AreaXRankings:data')
-        .rename('RainmakerXRankings:temp', 'RainmakerXRankings:data')
-        .rename('ClamXRankings:temp', 'ClamXRankings:data')
-        .rename('TowerXRankings:temp', 'TowerXRankings:data')
-        // Area, Rainmaker, Clam, Towerのtempを削除
-        .del('AreaXRankings:temp')
-        .del('RainmakerXRankings:temp')
-        .del('ClamXRankings:temp')
-        .del('TowerXRankings:temp')
-        // Area, Rainmaker, Clam, TowerのUpdatedAtを更新
-        .set('AreaXRankings:updatedAt', now)
-        .set('RainmakerXRankings:updatedAt', now)
-        .set('ClamXRankings:updatedAt', now)
-        .set('TowerXRankings:updatedAt', now)
-        .exec();
-
-    await RedisClient.disconnect();
-
-    logger.info('全モードのX Rankingを取得しました。');
 };

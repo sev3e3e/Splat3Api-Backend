@@ -1,18 +1,12 @@
 import SplatNet3Api, { XRankingRegion } from 'nxapi/splatnet3';
-import { ValueCache } from '../cache/Cache.js';
 import { removeAllScheduleCredentials } from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { RequestId } from 'splatnet3-types/splatnet3';
 
-import dayjs from 'dayjs';
-
 import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
 import { Logger } from 'winston';
-import {
-    removeBankaraScheduleCredentials,
-    removeSalmonRunScheduleCredentials,
-} from './data/credentialRemovers/ScheduleCredentialRemover.js';
 import { removeXRankingPlayerDataCredentials } from './data/credentialRemovers/XRankingCredentialRemover.js';
-import { SalmonRunSchedule, Schedule, XRankingPlayerData } from '@sev3e3e/splat3api-client';
+import { XRankingPlayerData } from '@sev3e3e/splat3api-client';
+import retry from 'async-retry';
 
 export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | null = null) => {
     logger?.debug('SplatNet3からScheduleを取得します');
@@ -32,76 +26,6 @@ export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | 
     return removed;
 };
 
-export async function getOpenBankaraSchedules(apiClient: SplatNet3Api, logger: Logger) {
-    // check caches
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
-
-        // TTL設定
-        // 最新のスケジュールの終了をTTL
-        // 0以下になったらキャッシュしない
-        const diff = dayjs(converted.open[0].endTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return converted.open;
-    } else {
-        return JSON.parse(cache.value) as Schedule[];
-    }
-}
-
-export async function getChallengeBankaraSchedules(apiClient: SplatNet3Api) {
-    // check caches
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const converted = removeBankaraScheduleCredentials(schedules.data.bankaraSchedules);
-
-        // TTL設定
-        // 最新のスケジュールの終了をTTL
-        // 0以下になったらキャッシュしない
-        const diff = dayjs(converted.challenge[0].endTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return converted.challenge;
-    } else {
-        return JSON.parse(cache.value) as Schedule[];
-    }
-}
-
-export async function getSalmonRunSchedules(apiClient: SplatNet3Api): Promise<SalmonRunSchedule[]> {
-    const cache = await ValueCache.get('Schedules');
-
-    if (cache == null) {
-        const schedules = await apiClient.getSchedules();
-
-        const salmonRunSchedules = removeSalmonRunScheduleCredentials(schedules.data.coopGroupingSchedule);
-
-        const diff = dayjs(salmonRunSchedules[0].startTime).diff(dayjs(), 'second');
-
-        if (diff > 0) {
-            await ValueCache.set('Schedules', schedules, diff);
-        }
-
-        return salmonRunSchedules;
-    } else {
-        const schedules = JSON.parse(cache.value);
-
-        return schedules;
-    }
-}
-
 export async function getXRankings(
     apiClient: SplatNet3Api,
     _mode: 'area' | 'tower' | 'rainmaker' | 'clam',
@@ -112,46 +36,65 @@ export async function getXRankings(
     let cursor: string | null = 'null';
     let datas: XRankingPlayerData[] = [];
 
+    let query: RequestId;
+    let mode: Mode;
+
+    switch (_mode) {
+        case 'area':
+            query = RequestId.DetailTabViewXRankingArRefetchQuery;
+            mode = Mode.Area;
+            break;
+
+        case 'clam':
+            query = RequestId.DetailTabViewXRankingClRefetchQuery;
+            mode = Mode.Clam;
+            break;
+        case 'rainmaker':
+            query = RequestId.DetailTabViewXRankingGlRefetchQuery;
+            mode = Mode.Rainmaker;
+            break;
+
+        case 'tower':
+            query = RequestId.DetailTabViewXRankingLfRefetchQuery;
+            mode = Mode.Tower;
+            break;
+    }
+
     for (let i = 1; i <= 5; i++) {
         while (true) {
             logger?.debug(`page ${i}, cursor: ${cursor}`);
 
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            let query: string;
-            let mode: Mode;
+            // retryする
+            const data = await retry(
+                async () => {
+                    const data = (await apiClient.persistedQuery(query, {
+                        cursor: cursor,
+                        first: 25,
+                        id: seasonId,
+                        page: i,
+                    })) as unknown as DetailTabViewXRankingRefetchQuery;
 
-            switch (_mode) {
-                case 'area':
-                    query = RequestId.DetailTabViewXRankingArRefetchQuery;
-                    mode = Mode.Area;
-                    break;
+                    return data;
+                },
+                {
+                    retries: 3,
+                    minTimeout: 5000,
+                    maxTimeout: 10000,
+                    onRetry(e, attempt) {
+                        logger?.warn(`retry ${attempt}回目: ${e}`);
+                    },
+                }
+            );
 
-                case 'clam':
-                    query = RequestId.DetailTabViewXRankingClRefetchQuery;
-                    mode = Mode.Clam;
-                    break;
-                case 'rainmaker':
-                    query = RequestId.DetailTabViewXRankingGlRefetchQuery;
-                    mode = Mode.Rainmaker;
-                    break;
+            const node = data.data.node;
 
-                case 'tower':
-                    query = RequestId.DetailTabViewXRankingLfRefetchQuery;
-                    mode = Mode.Tower;
-                    break;
+            if (node == null) {
+                throw new Error(`${mode} node is null`);
             }
 
-            const data = (await apiClient.persistedQuery(query, {
-                cursor: cursor,
-                first: 25,
-                id: seasonId,
-                page: i,
-            })) as unknown as DetailTabViewXRankingRefetchQuery;
-
-            const playerDatas = data.data.node[mode]!.edges.map((edge) =>
-                removeXRankingPlayerDataCredentials(edge.node)
-            );
+            const playerDatas = node[mode]!.edges.map((edge) => removeXRankingPlayerDataCredentials(edge.node));
 
             datas = datas.concat(playerDatas);
 

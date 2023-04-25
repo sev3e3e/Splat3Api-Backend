@@ -1,6 +1,6 @@
 node_modules
 .env*
 dist
-src/local/*.json
+src/local/
 yarn-error.log
 prod.env.yaml
