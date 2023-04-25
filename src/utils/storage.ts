@@ -7,14 +7,12 @@ export class CloudStorage {
         this.storage = new Storage();
     }
 
-    async getFiles(bucketName: string, dir: string) {
+    async getFiles(bucketName: string, prefix: string) {
         const [files] = await this.storage.bucket(bucketName).getFiles({
-            prefix: dir,
+            prefix: prefix,
         });
 
-        const jsonFiles = files.filter((file) => file.name.endsWith('.json'));
-
-        return jsonFiles;
+        return files;
     }
 
     /**
