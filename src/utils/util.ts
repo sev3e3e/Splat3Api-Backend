@@ -2,6 +2,9 @@ import tar from 'tar-stream';
 import { Mode } from '../types/xRankings.js';
 import dayjs from 'dayjs';
 
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+
 export function ReduceCacheExpiration(expiresIn: number, second: number = 5 * 60) {
     return expiresIn - second;
 }
@@ -28,7 +31,10 @@ export function tarJson(data: CompressJsonType | CompressJsonType[]) {
 }
 
 export function getXRankingJsonGCSPath(mode: Mode) {
-    const now = dayjs();
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+
+    const now = dayjs().tz('Asia/Tokyo');
     const datetimeStr = now.format('DD-MMM-YYYY');
     const datetimeStr2 = now.format(`HH`);
 
@@ -36,7 +42,10 @@ export function getXRankingJsonGCSPath(mode: Mode) {
 }
 
 export function getXRankingTarGzGCSPath(mode: Mode) {
-    const now = dayjs();
+    dayjs.extend(utc);
+    dayjs.extend(timezone);
+
+    const now = dayjs().tz('Asia/Tokyo');
     const datetimeStr = now.format('DD-MMM-YYYY');
 
     return `archives/${mode}/${datetimeStr}.tar.gz`;
