@@ -4,3 +4,4 @@ dist
 src/local/
 yarn-error.log
 prod.env.yaml
+src/tests/datas
