@@ -3535,10 +3535,10 @@ spdx-license-ids@^3.0.0:
   resolved "https://registry.yarnpkg.com/spdx-license-ids/-/spdx-license-ids-3.0.12.tgz#69077835abe2710b65f03969898b6637b505a779"
   integrity sha512-rr+VVSXtRhO4OHbXUiAF7xW3Bo9DuuF6C5jH+q/x15j2jniycgKbxU09Hr0WqlSLUs4i4ltHGXqTe7VHclYWyA==
 
-splatnet3-types@0.2.20230227204004, splatnet3-types@^0.2.20230227204004:
-  version "0.2.20230227204004"
-  resolved "https://registry.yarnpkg.com/splatnet3-types/-/splatnet3-types-0.2.20230227204004.tgz#ec3f8ac96a6680a94f6aaeea23a61274a281b2db"
-  integrity sha512-FAY6pbUcrp5O8c49BNXSKxoyM3UlCrRx2AtA9Y3qlvqOLdHqwxtzcdzbk1b1hRam8ZcrxRzE/ii6ESRiPIAnZw==
+splatnet3-types@0.2.20230610222246, splatnet3-types@^0.2.20230227204004:
+  version "0.2.20230610222246"
+  resolved "https://registry.yarnpkg.com/splatnet3-types/-/splatnet3-types-0.2.20230610222246.tgz#f4d5cf969e72d42680bce27b052791a78d8c0ec5"
+  integrity sha512-sBIQ60lhIa2AIuloglx16oEN3C8HU7cXbNUGTD+rfwCItPiH5JON6TIT4ByaJWmQ+y0EmWw+WO9NU46481I7jg==
 
 stack-trace@0.0.x:
   version "0.0.10"
