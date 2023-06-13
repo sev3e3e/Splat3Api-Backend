@@ -1,6 +1,6 @@
 import SplatNet3Api, { XRankingRegion } from 'nxapi/splatnet3';
 import { removeAllScheduleCredentials } from './data/credentialRemovers/ScheduleCredentialRemover.js';
-import { RequestId } from 'splatnet3-types/splatnet3';
+import { RequestId, StageScheduleResult } from 'splatnet3-types/splatnet3';
 
 import { DetailTabViewXRankingRefetchQuery, Mode } from '../types/xRankings.js';
 import { Logger } from 'winston';
@@ -10,7 +10,7 @@ import retry from 'async-retry';
 
 export const getAllSchedules = async (apiClient: SplatNet3Api, logger: Logger | null = null) => {
     logger?.debug('SplatNet3からScheduleを取得します');
-    const schedules = await apiClient.getSchedules();
+    const schedules = await apiClient.persistedQuery<StageScheduleResult>(RequestId.StageScheduleQuery, {});
     logger?.debug('Scheduleの取得が完了しました');
 
     // 念のため生Scheduleもキャッシュしておく
