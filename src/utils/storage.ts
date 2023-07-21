@@ -25,10 +25,14 @@ export class CloudStorage {
     }
 
     async saveJson(bucketName: string, filename: string, data: string) {
-        (await this.file(bucketName, filename)).save(data, {
-            contentType: 'application/json',
-            resumable: false,
-            validation: false,
-        });
+        (await this.file(bucketName, filename))
+            .save(data, {
+                contentType: 'application/json',
+                resumable: false,
+                validation: false,
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     }
 }
