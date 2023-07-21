@@ -214,19 +214,26 @@ export async function getXRankingsRaw(
 export async function getSeasonInfo(apiClient: SplatNet3Api, logger: Logger | null = null) {
     logger?.debug('現在のSeason情報を取得します。');
 
-    // const atlantic = await apiClient.getXRanking(XRankingRegion.ATLANTIC);
+    const atlantic = await apiClient.getXRanking(XRankingRegion.ATLANTIC);
     const pacific = await apiClient.getXRanking(XRankingRegion.PACIFIC);
 
     logger?.debug('Season情報の取得が完了しました。');
 
-    if (pacific.data.xRanking.currentSeason == null) {
-        return null;
-    }
+    if (pacific.data.xRanking.currentSeason == null || atlantic.data.xRanking.currentSeason == null)
+        throw new Error('Season情報を取得できませんでした');
 
     return {
-        id: pacific.data.xRanking.currentSeason.id,
-        name: pacific.data.xRanking.currentSeason.name,
-        startTime: pacific.data.xRanking.currentSeason.startTime,
-        endTime: pacific.data.xRanking.currentSeason.endTime,
+        pacific: {
+            id: pacific.data.xRanking.currentSeason.id,
+            name: pacific.data.xRanking.currentSeason.name,
+            startTime: pacific.data.xRanking.currentSeason.startTime,
+            endTime: pacific.data.xRanking.currentSeason.endTime,
+        },
+        atlantic: {
+            id: atlantic.data.xRanking.currentSeason.id,
+            name: atlantic.data.xRanking.currentSeason.name,
+            startTime: atlantic.data.xRanking.currentSeason.startTime,
+            endTime: atlantic.data.xRanking.currentSeason.endTime,
+        },
     };
 }

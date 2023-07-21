@@ -28,12 +28,12 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
 
     // update x ranking
     else if (message == 'update x-ranking') {
-        await updateXRanking();
+        await updateXRanking('pacific');
     }
 
     // update xrank raw
     else if (message == 'update x-ranking-raw') {
-        await updateXRankingRaw();
+        await updateXRankingRaw('pacific');
     }
 
     // archive x ranking
