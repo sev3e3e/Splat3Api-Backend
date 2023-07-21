@@ -11,7 +11,7 @@ import { CloudStorage } from './utils/storage.js';
  * 1時間ごとに更新らしい。
  * Cloud Functionsのリソース消費量とか無料枠の雰囲気がまだわかっていないため、並列実行はせず愚直にシングルインスタンスで実行する
  */
-export const updateXRanking = async () => {
+export const updateXRanking = async (region: 'atlantic' | 'pacific') => {
     // logger
     const logger = CreateLogger('updateXRanking');
 
@@ -33,19 +33,19 @@ export const updateXRanking = async () => {
 
     // area
     logger.info('エリアのX Rankingを取得します。');
-    const area = await getXRankings(api, 'area', seasonInfo.id, logger);
+    const area = await getXRankings(api, 'area', seasonInfo[region].id, logger);
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await getXRankings(api, 'rainmaker', seasonInfo.id, logger);
+    const rainmaker = await getXRankings(api, 'rainmaker', seasonInfo[region].id, logger);
 
     // clam
     logger.info('アサリのX Rankingを取得します。');
-    const clam = await getXRankings(api, 'clam', seasonInfo.id, logger);
+    const clam = await getXRankings(api, 'clam', seasonInfo[region].id, logger);
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await getXRankings(api, 'tower', seasonInfo.id, logger);
+    const tower = await getXRankings(api, 'tower', seasonInfo[region].id, logger);
 
     logger.info('Redisに保存します。');
 
@@ -118,7 +118,7 @@ export const updateXRanking = async () => {
     logger.info('全モードのX Rankingを取得しました。');
 };
 
-export const updateXRankingRaw = async () => {
+export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
     // logger
     const logger = CreateLogger('updateXRankingRaw');
 
@@ -140,31 +140,34 @@ export const updateXRankingRaw = async () => {
 
     // area
     logger.info('エリアのX Rankingを取得します。');
-    const area = await getXRankingsRaw(api, 'area', seasonInfo.id, logger);
+    const area = await getXRankingsRaw(api, 'area', seasonInfo[region].id, logger);
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
-    const rainmaker = await getXRankingsRaw(api, 'rainmaker', seasonInfo.id, logger);
+    const rainmaker = await getXRankingsRaw(api, 'rainmaker', seasonInfo[region].id, logger);
 
     // clam
     logger.info('アサリのX Rankingを取得します。');
-    const clam = await getXRankingsRaw(api, 'clam', seasonInfo.id, logger);
+    const clam = await getXRankingsRaw(api, 'clam', seasonInfo[region].id, logger);
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
-    const tower = await getXRankingsRaw(api, 'tower', seasonInfo.id, logger);
+    const tower = await getXRankingsRaw(api, 'tower', seasonInfo[region].id, logger);
 
     await RedisClient.disconnect();
 
     logger.info('Cloud Storageに保存します。');
     const storage = new CloudStorage();
 
-    await Promise.all([
-        uploadXRankingRaw(storage, Mode.Area, area),
-        uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker),
-        uploadXRankingRaw(storage, Mode.Clam, clam),
-        uploadXRankingRaw(storage, Mode.Tower, tower),
-    ]);
-
+    // await Promise.all([
+    //     uploadXRankingRaw(storage, Mode.Area, area),
+    //     uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker),
+    //     uploadXRankingRaw(storage, Mode.Clam, clam),
+    //     uploadXRankingRaw(storage, Mode.Tower, tower),
+    // ]);
+    await uploadXRankingRaw(storage, Mode.Area, area);
+    await uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker);
+    await uploadXRankingRaw(storage, Mode.Clam, clam);
+    await uploadXRankingRaw(storage, Mode.Tower, tower);
     logger.info('全モードのX Rankingを取得しました。');
 };
