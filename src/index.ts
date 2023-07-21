@@ -13,11 +13,6 @@ import * as main from './index.js';
 
 import { archiveXRanking } from './archiveXRanking.js';
 import { updateXRanking, updateXRankingRaw } from './updateXRanking.js';
-import { getXRankings } from './splatnet/SplatNet3Client.js';
-import { writeFileSync } from 'fs';
-import { uploadXRankingRaw } from './uploadXRanking.js';
-import { CloudStorage } from './utils/storage.js';
-import { Mode } from './types/xRankings.js';
 
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
