@@ -12,7 +12,7 @@ import dayjs from 'dayjs';
 import * as main from './index.js';
 
 import { archiveXRanking } from './archiveXRanking.js';
-import { updateXRanking } from './updateXRanking.js';
+import { updateXRanking, updateXRankingRaw } from './updateXRanking.js';
 
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
@@ -29,6 +29,11 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
     // update x ranking
     else if (message == 'update x-ranking') {
         await updateXRanking();
+    }
+
+    // update xrank raw
+    else if (message == 'update x-ranking-raw') {
+        await updateXRankingRaw();
     }
 
     // archive x ranking
