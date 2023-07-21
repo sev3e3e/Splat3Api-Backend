@@ -12,7 +12,12 @@ import dayjs from 'dayjs';
 import * as main from './index.js';
 
 import { archiveXRanking } from './archiveXRanking.js';
-import { updateXRanking } from './updateXRanking.js';
+import { updateXRanking, updateXRankingRaw } from './updateXRanking.js';
+import { getXRankings } from './splatnet/SplatNet3Client.js';
+import { writeFileSync } from 'fs';
+import { uploadXRankingRaw } from './uploadXRanking.js';
+import { CloudStorage } from './utils/storage.js';
+import { Mode } from './types/xRankings.js';
 
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
@@ -29,6 +34,11 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
     // update x ranking
     else if (message == 'update x-ranking') {
         await updateXRanking();
+    }
+
+    // update xrank raw
+    else if (message == 'update x-ranking-raw') {
+        await updateXRankingRaw();
     }
 
     // archive x ranking
