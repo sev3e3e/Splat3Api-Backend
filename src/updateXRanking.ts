@@ -122,9 +122,6 @@ export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
     // logger
     const logger = CreateLogger('updateXRankingRaw');
 
-    // getCurrentTime
-    const now = dayjs().format();
-
     await RedisClient.connect();
 
     // 認証
@@ -134,11 +131,11 @@ export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
     // get season info
     const seasonInfo = await getSeasonInfo(api, logger);
 
+    await RedisClient.disconnect();
+
     if (seasonInfo == null) {
         throw new Error('SeasonInfoが取得できませんでした。');
     }
-
-    await RedisClient.disconnect();
 
     const storage = new CloudStorage();
 
@@ -165,13 +162,6 @@ export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
     const tower = await getXRankingsRaw(api, 'tower', seasonInfo[region].id, logger);
 
     uploadXRankingRaw(storage, Mode.Tower, tower);
-
-    // await Promise.all([
-    //     uploadXRankingRaw(storage, Mode.Area, area),
-    //     uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker),
-    //     uploadXRankingRaw(storage, Mode.Clam, clam),
-    //     uploadXRankingRaw(storage, Mode.Tower, tower),
-    // ]);
 
     logger.info('全モードのX Rankingを取得しました。');
 };

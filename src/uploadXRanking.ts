@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat.js';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
-dayjs.locale('ja');
+// dayjs.locale('ja');
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -39,7 +39,7 @@ export const uploadXRankingRaw = (storage: CloudStorage, mode: Mode, data: Detai
     };
 
     const bucketName = 'splat3api-data';
-    const now = dayjs();
+    const now = dayjs().utc();
 
     const seasonId = Buffer.from(data.data.node.id, 'base64').toString();
     const idTagMatch = seasonId.match(/[pa]:\d{1,}/);

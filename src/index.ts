@@ -102,5 +102,3 @@ export const updateSchedule = async () => {
 
     logger.info(`Scheduleの更新完了です。TTL: ${diff}, TTR: ${diff - TTR}`);
 };
-
-await updateXRankingRaw('pacific');
