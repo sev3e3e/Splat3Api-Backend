@@ -40,7 +40,7 @@ export class CloudStorage {
 
     saveJsonWithStreams(bucketName: string, filename: string, data: string) {
         const file = this.storage.bucket(bucketName).file(filename);
-        Readable.from(JSON.stringify(data))
+        Readable.from(data)
             .pipe(
                 file.createWriteStream({
                     metadata: {
