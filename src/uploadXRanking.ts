@@ -28,7 +28,7 @@ export const uploadXRanking = async (storage: CloudStorage, mode: Mode, datas: X
     await storage.saveJson(bucketName, filename, JSON.stringify(datas));
 };
 
-export const uploadXRankingRaw = async (storage: CloudStorage, mode: Mode, data: DetailTabViewXRankingRefetchQuery) => {
+export const uploadXRankingRaw = (storage: CloudStorage, mode: Mode, data: DetailTabViewXRankingRefetchQuery) => {
     const modes: {
         [mode in Mode]: string;
     } = {
@@ -51,5 +51,6 @@ export const uploadXRankingRaw = async (storage: CloudStorage, mode: Mode, data:
         modes[mode]
     }.json`;
 
-    await storage.saveJson(bucketName, `${dir}/${filename}`, JSON.stringify(data));
+    // await storage.saveJson(bucketName, `${dir}/${filename}`, JSON.stringify(data));
+    storage.saveJsonWithStreams(bucketName, `${dir}/${filename}`, JSON.stringify(data));
 };
