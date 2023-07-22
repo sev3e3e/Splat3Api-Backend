@@ -138,26 +138,33 @@ export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
         throw new Error('SeasonInfoが取得できませんでした。');
     }
 
+    await RedisClient.disconnect();
+
+    const storage = new CloudStorage();
+
     // area
     logger.info('エリアのX Rankingを取得します。');
     const area = await getXRankingsRaw(api, 'area', seasonInfo[region].id, logger);
+
+    uploadXRankingRaw(storage, Mode.Area, area);
 
     // rainmaker
     logger.info('ホコのX Rankingを取得します。');
     const rainmaker = await getXRankingsRaw(api, 'rainmaker', seasonInfo[region].id, logger);
 
+    uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker);
+
     // clam
     logger.info('アサリのX Rankingを取得します。');
     const clam = await getXRankingsRaw(api, 'clam', seasonInfo[region].id, logger);
+
+    uploadXRankingRaw(storage, Mode.Clam, clam);
 
     // tower
     logger.info('ヤグラのX Rankingを取得します。');
     const tower = await getXRankingsRaw(api, 'tower', seasonInfo[region].id, logger);
 
-    await RedisClient.disconnect();
-
-    logger.info('Cloud Storageに保存します。');
-    const storage = new CloudStorage();
+    uploadXRankingRaw(storage, Mode.Tower, tower);
 
     // await Promise.all([
     //     uploadXRankingRaw(storage, Mode.Area, area),
@@ -165,9 +172,6 @@ export const updateXRankingRaw = async (region: 'atlantic' | 'pacific') => {
     //     uploadXRankingRaw(storage, Mode.Clam, clam),
     //     uploadXRankingRaw(storage, Mode.Tower, tower),
     // ]);
-    await uploadXRankingRaw(storage, Mode.Area, area);
-    await uploadXRankingRaw(storage, Mode.Rainmaker, rainmaker);
-    await uploadXRankingRaw(storage, Mode.Clam, clam);
-    await uploadXRankingRaw(storage, Mode.Tower, tower);
+
     logger.info('全モードのX Rankingを取得しました。');
 };
