@@ -34,6 +34,7 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
     // update xrank raw
     else if (message == 'update x-ranking-raw') {
         await updateXRankingRaw('pacific');
+        await updateXRankingRaw('atlantic');
     }
 
     // archive x ranking
