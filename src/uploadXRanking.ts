@@ -46,7 +46,7 @@ export const uploadXRankingRaw = (storage: CloudStorage, mode: Mode, data: Detai
 
     if (!idTagMatch) throw new Error(`season ID parse error ${seasonId}`);
 
-    const dir = `jsons/raw/archive/${now.year()}/${now.month() + 1}/${now.date()}`;
+    const dir = `jsons/raw/archive/${now.format('YYYY/MM/DD')}`;
     const filename = `${now.format('YYYY-MM-DD.HH-mm-ss')}.xrank.detail.${idTagMatch[0].replace(':', '-')}.${
         modes[mode]
     }.json`;
