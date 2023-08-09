@@ -1,11 +1,11 @@
 import dayjs from 'dayjs';
-import { CreateLogger } from './log/winston.js';
-import { RedisClient } from './redis/RedisClient.js';
-import { Authentication } from './splatnet/Auth.js';
-import { getSeasonInfo, getXRankings, getXRankingsRaw } from './splatnet/SplatNet3Client.js';
-import { Mode } from './types/xRankings.js';
+import { CreateLogger } from '../log/winston.js';
+import { RedisClient } from '../redis/RedisClient.js';
+import { Authentication } from '../splatnet/Auth.js';
+import { getSeasonInfo, getXRankings, getXRankingsRaw } from '../splatnet/SplatNet3Client.js';
+import { Mode } from '../types/xRankings.js';
+import { CloudStorage } from '../utils/storage.js';
 import { uploadXRanking, uploadXRankingRaw } from './uploadXRanking.js';
-import { CloudStorage } from './utils/storage.js';
 
 /**
  * 1時間ごとに更新らしい。

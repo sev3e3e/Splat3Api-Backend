@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import path from 'path';
-import { Mode } from './types/xRankings.js';
-import { CloudStorage } from './utils/storage.js';
-import { tarJson } from './utils/util.js';
+import { Mode } from '../types/xRankings.js';
+import { CloudStorage } from '../utils/storage.js';
+import { tarJson } from '../utils/util.js';
 
 import * as zlib from 'zlib';
 
