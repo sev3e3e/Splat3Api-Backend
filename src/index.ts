@@ -11,8 +11,9 @@ import dayjs from 'dayjs';
 // !: Import itself for testing
 import * as main from './index.js';
 
-import { archiveXRanking } from './archiveXRanking.js';
-import { updateXRanking, updateXRankingRaw } from './updateXRanking.js';
+import { archiveXRanking } from './functions/archiveXRanking.js';
+import { updateXRanking, updateXRankingRaw } from './functions/updateXRanking.js';
+import { updateSeasonInfo } from './functions/updateSeasonInfo.js';
 
 export const index = async (_msg: PubsubMessage, context: Context) => {
     if (!_msg.data) {
@@ -40,6 +41,10 @@ export const index = async (_msg: PubsubMessage, context: Context) => {
     // archive x ranking
     else if (message == 'archive x-ranking') {
         await archiveXRanking();
+    }
+    // update seasoninfo
+    else if (message == 'update seasoninfo') {
+        await updateSeasonInfo();
     }
 };
 
